@@ -41,14 +41,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class RegistrationHandler extends Service {
 
-    /**
-     * Substitute you own sender ID here. This is the project number you got
-     * from the API Console, as described in "Getting Started."
-     */
     private static boolean started = false;
     private int mStartMode = Service.START_STICKY;
-//    private static final String SENDER_ID = "821664749841"; // sensible
-    private static final String SENDER_ID = "643857770918"; // lasse
     private static final String TAG = "AUTH_RegistrationHandler";
 
     public static final String EXTRA_MESSAGE = "message";
@@ -90,7 +84,7 @@ public class RegistrationHandler extends Service {
         NOT_REGISTERED_NO_CODE, NOT_REGISTERED_HAS_CODE, REGISTERED_EXPIRED, REGISTERED
     }
 
-    private static final String DOMAIN_URL = "http://54.229.13.160/lasse/";
+    private static final String DOMAIN_URL = "https://54.229.13.160/lasse/";
 //    private static final String DOMAIN_URL = "https://www.sensible.dtu.dk/";
 
     //private static final String BASE_URL = "http://ec2-54-229-13-160.eu-west-1.compute.amazonaws.com:8082/authorization_manager/connector_funf/auth/grant/?scope=connector_funf.submit_data&";
@@ -300,7 +294,7 @@ public class RegistrationHandler extends Service {
                     if (gcm == null) {
                         gcm = GoogleCloudMessaging.getInstance(context);
                     }
-                    regid = gcm.register(SENDER_ID);
+                    regid = gcm.register(Secret.SENDER_ID);
                     Log.d(TAG, "Device registered, registration id=" + regid);
                     msg = "Device registered, registration id=" + regid;
 
@@ -387,7 +381,7 @@ public class RegistrationHandler extends Service {
                 HttpClient httpclient = new DefaultHttpClient();
                 HttpPost httppost = null;
                 httppost = new HttpPost(strings[0]);
-                //?code=14e3b14e5759095cc7d74f169eac23&client_id=77a102b767a4b9ed0de963903aac32&client_secret=4190e63044c6b4687496261d44469d
+                
                 try {
                     ArrayList<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
                     nameValuePairs.add(new BasicNameValuePair("client_id", Secret.CLIENT_ID));

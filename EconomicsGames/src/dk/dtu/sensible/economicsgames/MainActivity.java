@@ -63,8 +63,8 @@ public class MainActivity extends Activity {
 //			startActivity(discoverableIntent);
 //		}
 
-		Intent i = new Intent(this, AuthActivity.class);
-		startActivity(i);
+//		Intent i = new Intent(this, AuthActivity.class);
+//		startActivity(i);
 		if (!serviceRunning) {
 			serviceRunning = true;
 			LauncherReceiver.startService(this, RegistrationHandler.class);

@@ -45,7 +45,7 @@ public class AuthActivity extends Activity {
 
     private static final String GRANT_ENDPOINT_URL = "sensible-dtu/authorization_manager/connector_economics/auth/grant/";
     private static final String SUCCESS_URL = "/sensible-data/?status=success";
-    private static final String BASE_URL = DOMAIN_URL + GRANT_ENDPOINT_URL + "?scope=connector_economics.submit_data";
+    private static final String BASE_URL = DOMAIN_URL + GRANT_ENDPOINT_URL + "?scope=connector_economics.submit_data,connector_economics.push_notifications";
 
     private static final String CODE_URL_PREFIX = "sensible-dtu/authorization_manager/connector_economics/auth/granted/";
 
@@ -106,6 +106,7 @@ public class AuthActivity extends Activity {
                     String code = null;
                     if (url != null) {
                         if (url.contains(CODE_URL_PREFIX)) {
+                        	Log.d(TAG,"Code url found");
                             if (url.contains("&code=")) {
                                 String[] parts = url.split("&code=");
                                 if (parts[1].contains("&")) {
