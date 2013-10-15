@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Economics Games</string>
+    <string name="share_button">Share</string>
+    <string name="dummy_content">Make a decision</string>
+    <string name="keep_button">Keep</string>
+
+    <string name="app_ver">v0.1</string>
+</resources>

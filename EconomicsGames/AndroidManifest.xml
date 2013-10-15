@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="dk.dtu.sensible.economicsgames"
+    android:versionCode="1"
+    android:versionName="1.0" >
+	
+    <uses-sdk
+        android:minSdkVersion="15"
+        android:targetSdkVersion="18" />
+    
+    
+    <!-- All probes -->
+<!--     <uses-permission android:name="android.permission.WAKE_LOCK"/> -->
+    
+    <!-- DatabaseService, Archive service (unique ids) -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    
+    <!-- gcm permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    
+	<permission android:name="dk.dtu.sensible.economicsgames.gcm.permission.C2D_MESSAGE" 
+	    android:protectionLevel="signature" />
+    <uses-permission android:name="dk.dtu.sensible.economicsgames.gcm.permission.C2D_MESSAGE" />
+  
+        
+        
+    <application
+        android:allowBackup="true"
+        android:label="@string/app_name" 
+        android:largeHeap="true" 
+        android:icon="@drawable/red_logo5"
+        android:theme="@style/AppTheme" >
+        
+        <service android:name=".MainPipeline"></service>
+<!--         <service android:name="edu.mit.media.funf.storage.NameValueDatabaseService"></service> -->
+<!--         <service android:name="edu.mit.media.funf.storage.HttpUploadService"></service> -->
+        <service android:name=".RegistrationHandler"/>
+
+        <receiver android:name=".LauncherReceiver" android:enabled="true">
+<!--         	<intent-filter> -->
+<!--         		<action android:name="android.intent.action.BATTERY_CHANGED" /> -->
+<!--         		<action android:name="android.intent.action.BOOT_COMPLETED" /> -->
+<!--         		<action android:name="android.intent.action.DOCK_EVENT" /> -->
+<!--         		<action android:name="android.intent.action.ACTION_SCREEN_ON" /> -->
+<!--         		<action android:name="android.intent.action.USER_PRESENT" /> -->
+<!--         	</intent-filter> -->
+        </receiver>
+        <receiver
+            android:name=".GcmBroadcastReceiver"
+            android:permission="com.google.android.c2dm.permission.SEND" >
+
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <category android:name="dk.dtu.imm.datacollector"/>
+            </intent-filter>
+        </receiver>
+        
+        
+        <activity
+            android:name="dk.dtu.sensible.economicsgames.FullscreenActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/app_name"
+            android:theme="@style/FullscreenTheme" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        
+        <activity android:name=".MainActivity" android:theme="@style/FullscreenTheme" android:label="@string/app_name" android:configChanges="keyboardHidden|orientation|screenSize" android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".AuthActivity" android:screenOrientation="portrait"/>
+    
+    </application>
+
+</manifest>
