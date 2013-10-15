@@ -14,6 +14,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -39,31 +40,31 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
         Log.d(TAG, "Received: " + intent.getExtras().toString());
         GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
         ctx = context;
+        Bundle extras = intent.getExtras();
         String messageType = gcm.getMessageType(intent);
         if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
-            sendNotification("Send error: " + intent.getExtras().toString(), AuthActivity.class);
+//            sendNotification("Send error: " + extras.toString(), AuthActivity.class);
         } else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED.equals(messageType)) {
-            sendNotification("Deleted messages on server: " +
-                    intent.getExtras().toString(), AuthActivity.class);
+//            sendNotification("Deleted messages on server: " +	extras.toString(), AuthActivity.class);
         } else {
         	Intent notifyIntent = new Intent(EVENT_MSG_RECEIVED);
-        	notifyIntent.putExtras(intent.getExtras());
+        	notifyIntent.putExtras(extras);
         	LocalBroadcastManager.getInstance(context).sendBroadcast(notifyIntent);
 
         	// TODO: Change classes based on the extras in the gcm message?
         	String msgType = intent.getExtras().getString("type");
             Log.d(TAG, "msg-type: " + msgType);
         	if (msgType.equalsIgnoreCase("economics-pgg-init")) {
-        		sendNotification(intent.getExtras().getString("title"), FullscreenActivity.class);
+        		sendNotification(extras.getString("title"), extras.getString("body"), FullscreenActivity.class);
         	} else {
-	            sendNotification(intent.getExtras().getString("title"), AuthActivity.class);
+	            sendNotification(extras.getString("title"), "", AuthActivity.class);
         	}
         }
         setResultCode(Activity.RESULT_OK);
     }
 
     // Put the GCM message into a notification and post it.
-    private void sendNotification(String msg, Class activity) {
+    private void sendNotification(String title, String msg, Class activity) {
         mNotificationManager = (NotificationManager)
                 ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         
@@ -73,7 +74,7 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(ctx)
                         .setSmallIcon(R.drawable.red_logo5)
-                        .setContentTitle("GCM Notification")
+                        .setContentTitle(title)
                         .setStyle(new NotificationCompat.BigTextStyle()
                                 .bigText(msg))
                         .setContentText(msg);

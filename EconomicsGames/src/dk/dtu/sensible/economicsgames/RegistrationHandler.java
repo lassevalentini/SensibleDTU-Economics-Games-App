@@ -17,20 +17,31 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import dk.dtu.sensible.economicsgames.R;
 
-import org.apache.http.HttpResponse;
+//import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
+//import org.apache.http.client.HttpClient;
+//import org.apache.http.client.entity.UrlEncodedFormEntity;
+//import org.apache.http.client.methods.HttpPost;
+//import org.apache.http.conn.scheme.Scheme;
+//import org.apache.http.conn.scheme.SchemeRegistry;
+//import org.apache.http.conn.ssl.SSLSocketFactory;
+//import org.apache.http.conn.ssl.X509HostnameVerifier;
+//import org.apache.http.impl.client.DefaultHttpClient;
+//import org.apache.http.impl.conn.SingleClientConnManager;
+//import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+
 
 /**
  * Created with IntelliJ IDEA.
@@ -83,17 +94,13 @@ public class RegistrationHandler extends Service {
     public enum SensibleRegistrationStatus {
         NOT_REGISTERED_NO_CODE, NOT_REGISTERED_HAS_CODE, REGISTERED_EXPIRED, REGISTERED
     }
+    
+    public static Object registrationLock = new Object();
 
-    private static final String DOMAIN_URL = "https://54.229.13.160/lasse/";
-//    private static final String DOMAIN_URL = "https://www.sensible.dtu.dk/";
-
-    //private static final String BASE_URL = "http://ec2-54-229-13-160.eu-west-1.compute.amazonaws.com:8082/authorization_manager/connector_funf/auth/grant/?scope=connector_funf.submit_data&";
-
-    private static final String CODE_TO_TOKEN_URL = DOMAIN_URL + "sensible-dtu/authorization_manager/connector_economics/auth/token/";
-    //private static final String CODE_TO_TOKEN_URL = DOMAIN_URL + "sensible-dtu/authorization_manager/connector_raw/v1/auth/token_mobile/";
-
-    private static final String REFRESH_TOKEN_URL = DOMAIN_URL + "sensible-dtu/authorization_manager/connector_economics/auth/refresh_token/";
-    private static final String SET_GCM_ID_URL = DOMAIN_URL + "sensible-dtu/authorization_manager/connector_economics/auth/gcm/";
+    private static final String CODE_TO_TOKEN_URL = SharedConstants.DOMAIN_URL + "sensible-dtu/authorization_manager/connector_economics/auth/token/";
+    
+    private static final String REFRESH_TOKEN_URL = SharedConstants.DOMAIN_URL + "sensible-dtu/authorization_manager/connector_economics/auth/refresh_token/";
+    private static final String SET_GCM_ID_URL = SharedConstants.DOMAIN_URL + "sensible-dtu/authorization_manager/connector_economics/auth/gcm/";
 
 
 
@@ -371,54 +378,108 @@ public class RegistrationHandler extends Service {
 
             @Override
             protected Double doInBackground(String... strings) {
-                //
-                //HttpClient httpClient = new DefaultHttpClient();
-                //SSLSocketFactory sf = (SSLSocketFactory)httpClient.getConnectionManager()
-                //       .getSchemeRegistry().getScheme("https").getSocketFactory();
-                //sf.setHostnameVerifier(new AllowAllHostnameVerifier());
-                //
+            	
+            	
+//                HttpClient httpclient = new DefaultHttpClient();
+//                
+//                // Disable pesky ssl warnings during testing
+//                SSLSocketFactory sf = (SSLSocketFactory)httpclient.getConnectionManager()
+//                        .getSchemeRegistry().getScheme("https").getSocketFactory();
+//                sf.setHostnameVerifier(new AllowAllHostnameVerifier());
+                	
 
-                HttpClient httpclient = new DefaultHttpClient();
-                HttpPost httppost = null;
-                httppost = new HttpPost(strings[0]);
+                HostnameVerifier hostnameVerifier = new HostnameVerifier() {
+                	public boolean verify(String hostname, javax.net.ssl.SSLSession session) {
+                		return true;
+                	};
+                };
+                HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
+
+//                DefaultHttpClient client = new DefaultHttpClient();
+//
+//                SchemeRegistry registry = new SchemeRegistry();
+//                SSLSocketFactory socketFactory = SSLSocketFactory.getSocketFactory();
+//                socketFactory.setHostnameVerifier((X509HostnameVerifier) hostnameVerifier);
+//                registry.register(new Scheme("https", socketFactory, 443));
+//                SingleClientConnManager mgr = new SingleClientConnManager(client.getParams(), registry);
+//                DefaultHttpClient httpclient = new DefaultHttpClient(mgr, client.getParams());
+
+                // Set verifier     
+                HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
                 
+                
+//                HttpPost httppost = null;
+//                httppost = new HttpPost(strings[0]);
+                
+    	        
                 try {
-                    ArrayList<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
-                    nameValuePairs.add(new BasicNameValuePair("client_id", Secret.CLIENT_ID));
-                    nameValuePairs.add(new BasicNameValuePair("client_secret", Secret.CLIENT_SECRET));
+
+        	        URL url = new URL(strings[0]);
+                    HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+                    conn.setHostnameVerifier(hostnameVerifier);
+                    
+//                    ArrayList<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
+//                    nameValuePairs.add(new BasicNameValuePair("client_id", Secret.CLIENT_ID));
+//                    nameValuePairs.add(new BasicNameValuePair("client_secret", Secret.CLIENT_SECRET));
+                	conn.addRequestProperty("client_id", Secret.CLIENT_ID);
+                	conn.addRequestProperty("client_secret", Secret.CLIENT_SECRET);
                     TelephonyManager tm = (TelephonyManager)context.getSystemService(TELEPHONY_SERVICE);
                     String imei = tm.getDeviceId();
-                    nameValuePairs.add(new BasicNameValuePair("device_id", imei));
+//                    nameValuePairs.add(new BasicNameValuePair("device_id", imei));
+                	conn.addRequestProperty("device_id", imei);
                     Log.d(TAG, "Params: " + strings[0] + ", " + strings[1]);
                     if (strings[0].equals(CODE_TO_TOKEN_URL)) {
-                        nameValuePairs.add(new BasicNameValuePair("code", strings[1]));
+                    	conn.addRequestProperty("code", strings[1]);
+//                        nameValuePairs.add(new BasicNameValuePair("code", strings[1]));
                     } else if (strings[0].equals(REFRESH_TOKEN_URL)) {
-                        nameValuePairs.add(new BasicNameValuePair("refresh_token", strings[1]));
+                    	conn.addRequestProperty("refresh_token", strings[1]);
+//                        nameValuePairs.add(new BasicNameValuePair("refresh_token", strings[1]));
                     } else if (strings[0].equals(SET_GCM_ID_URL)) {
-                        nameValuePairs.add(new BasicNameValuePair("gcm_id", getRegistrationId(context)));
-                        nameValuePairs.add(new BasicNameValuePair("bearer_token", strings[1]));
+                    	conn.addRequestProperty("gcm_id", getRegistrationId(context));
+                    	conn.addRequestProperty("bearer_token", strings[1]);
+//                        nameValuePairs.add(new BasicNameValuePair("gcm_id", getRegistrationId(context)));
+//                        nameValuePairs.add(new BasicNameValuePair("bearer_token", strings[1]));
                     }
-                    for (BasicNameValuePair nvp : nameValuePairs) {
-                        Log.d(TAG, nvp.getName() + " : " + nvp.getValue());
-                    }
+//                    for (BasicNameValuePair nvp : nameValuePairs) {
+//                        Log.d(TAG, nvp.getName() + " : " + nvp.getValue());
+//                    }
 
-                    httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-                    Log.d(TAG, httppost.toString());
-                    HttpResponse response = httpclient.execute(httppost);
-                    String responseString = inputStreamToString(response.getEntity().getContent()).toString();
-                    //String[] parts = responseString.split("<body>");
-                    //Log.d(TAG, "Response: " + parts[1].replace(">",">\n"));
+//                    httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+//                    Log.d(TAG, httppost.getURI() + " "+ httppost.);
+                    
+                    for (String key : conn.getRequestProperties().keySet()) {
+						Log.d(TAG, key+": "+conn.getRequestProperty(key));
+					}
+                    
+                    Log.d(TAG, url.toString());
+                    
+        	        conn.setReadTimeout(10000 /* milliseconds */);
+        	        conn.setConnectTimeout(15000 /* milliseconds */);
+        	        conn.setRequestMethod("GET");
+        	        conn.setDoInput(true);
+        	        // Starts the query
+        	        conn.connect();
+                    
+        	        java.util.Scanner s = new java.util.Scanner(conn.getInputStream(), "utf-8").useDelimiter("\\A");
+        	        String responseString = s.hasNext() ? s.next() : "";
+        	        
+//                    HttpResponse response = httpclient.execute(httppost);
+//                    String responseString = inputStreamToString(response.getEntity().getContent()).toString();
 
 
                     processResponse(strings[0], responseString);
                 } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    e.printStackTrace();  
                 } catch (ClientProtocolException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    e.printStackTrace();  
                 } catch (IOException e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    e.printStackTrace();  
+                } finally {
+                	synchronized (registrationLock) {
+                		registrationLock.notifyAll();
+					}
                 }
-                return null;  //To change body of implemented methods use File | Settings | File Templates.
+                return null; 
             }
         }.execute(api_url, extra_param, null);
 

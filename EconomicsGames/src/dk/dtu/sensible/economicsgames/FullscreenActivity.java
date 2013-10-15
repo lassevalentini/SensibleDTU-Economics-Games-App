@@ -118,10 +118,10 @@ public class FullscreenActivity extends Activity {
         findViewById(R.id.KeepButton).setOnTouchListener(mDelayHideTouchListener);
         
         // Add text from message:
-        if (getIntent() == null) {
+        if (getIntent() == null || getIntent().getExtras() == null) {
         	Log.i(TAG, "NULL");
         } else {
-        	Log.i(TAG, getIntent().getExtras().getString("test"));
+        	Log.i(TAG, getIntent().getExtras().getString("type"));
         }
         
     }

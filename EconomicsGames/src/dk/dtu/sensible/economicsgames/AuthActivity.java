@@ -33,19 +33,9 @@ public class AuthActivity extends Activity {
 
     AuthActivity activity;
 
-    /**
-     * IP of Milosz, for testing
-     */
-    private static final String DOMAIN_URL = "https://54.229.13.160/lasse/";
-
-    /**
-     * Production address
-     */
-//    private static final String DOMAIN_URL = "https://www.sensible.dtu.dk/";
-
     private static final String GRANT_ENDPOINT_URL = "sensible-dtu/authorization_manager/connector_economics/auth/grant/";
     private static final String SUCCESS_URL = "/sensible-data/?status=success";
-    private static final String BASE_URL = DOMAIN_URL + GRANT_ENDPOINT_URL + "?scope=connector_economics.submit_data,connector_economics.push_notifications";
+    private static final String BASE_URL = SharedConstants.DOMAIN_URL + GRANT_ENDPOINT_URL + "?scope=connector_economics.submit_data,connector_economics.push_notifications";
 
     private static final String CODE_URL_PREFIX = "sensible-dtu/authorization_manager/connector_economics/auth/granted/";
 

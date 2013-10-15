@@ -11,6 +11,9 @@
     
     <!-- All probes -->
 <!--     <uses-permission android:name="android.permission.WAKE_LOCK"/> -->
+
+	<!-- Ability to check connectivity before loading urls -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     
     <!-- DatabaseService, Archive service (unique ids) -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
