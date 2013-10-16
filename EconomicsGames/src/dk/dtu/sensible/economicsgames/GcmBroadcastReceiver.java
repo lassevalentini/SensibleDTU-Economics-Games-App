@@ -55,7 +55,7 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
         	String msgType = intent.getExtras().getString("type");
             Log.d(TAG, "msg-type: " + msgType);
         	if (msgType.equalsIgnoreCase("economics-pgg-init")) {
-        		sendNotification(extras.getString("title"), extras.getString("body"), FullscreenActivity.class);
+        		sendNotification(extras.getString("title"), extras.getString("body"), PGGActivity.class);
         	} else {
 	            sendNotification(extras.getString("title"), "", AuthActivity.class);
         	}

@@ -12,5 +12,5 @@ public final class SharedConstants {
      */
 //    public static final String DOMAIN_URL = "https://www.sensible.dtu.dk/";
     
-    
+    public static final String DATABASE_NAME = "economics_games_db";
 }

@@ -1,5 +1,7 @@
 <resources>
 
     <color name="black_overlay">#66000000</color>
+    <color name="status_error">#D80000</color>
+    <color name="status_info">#333</color>
 
 </resources>

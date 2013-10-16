@@ -19,6 +19,9 @@ import dk.dtu.sensible.economicsgames.R;
 
 //import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.message.BasicNameValuePair;
 //import org.apache.http.client.HttpClient;
 //import org.apache.http.client.entity.UrlEncodedFormEntity;
 //import org.apache.http.client.methods.HttpPost;
@@ -35,12 +38,19 @@ import org.json.JSONObject;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.cert.CertificateException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+//import javax.net.ssl.TrustManager;
+//import javax.net.ssl.X509TrustManager;
+import java.security.cert.X509Certificate;
 
 
 /**
@@ -379,92 +389,57 @@ public class RegistrationHandler extends Service {
             @Override
             protected Double doInBackground(String... strings) {
             	
+            	InputStream is = null;
+            	OutputStream os = null;
             	
-//                HttpClient httpclient = new DefaultHttpClient();
-//                
-//                // Disable pesky ssl warnings during testing
-//                SSLSocketFactory sf = (SSLSocketFactory)httpclient.getConnectionManager()
-//                        .getSchemeRegistry().getScheme("https").getSocketFactory();
-//                sf.setHostnameVerifier(new AllowAllHostnameVerifier());
-                	
-
-                HostnameVerifier hostnameVerifier = new HostnameVerifier() {
-                	public boolean verify(String hostname, javax.net.ssl.SSLSession session) {
-                		return true;
-                	};
-                };
-                HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
-
-//                DefaultHttpClient client = new DefaultHttpClient();
-//
-//                SchemeRegistry registry = new SchemeRegistry();
-//                SSLSocketFactory socketFactory = SSLSocketFactory.getSocketFactory();
-//                socketFactory.setHostnameVerifier((X509HostnameVerifier) hostnameVerifier);
-//                registry.register(new Scheme("https", socketFactory, 443));
-//                SingleClientConnManager mgr = new SingleClientConnManager(client.getParams(), registry);
-//                DefaultHttpClient httpclient = new DefaultHttpClient(mgr, client.getParams());
-
-                // Set verifier     
-                HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
-                
-                
-//                HttpPost httppost = null;
-//                httppost = new HttpPost(strings[0]);
-                
-    	        
                 try {
 
         	        URL url = new URL(strings[0]);
-                    HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-                    conn.setHostnameVerifier(hostnameVerifier);
-                    
-//                    ArrayList<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
-//                    nameValuePairs.add(new BasicNameValuePair("client_id", Secret.CLIENT_ID));
-//                    nameValuePairs.add(new BasicNameValuePair("client_secret", Secret.CLIENT_SECRET));
-                	conn.addRequestProperty("client_id", Secret.CLIENT_ID);
-                	conn.addRequestProperty("client_secret", Secret.CLIENT_SECRET);
-                    TelephonyManager tm = (TelephonyManager)context.getSystemService(TELEPHONY_SERVICE);
-                    String imei = tm.getDeviceId();
-//                    nameValuePairs.add(new BasicNameValuePair("device_id", imei));
-                	conn.addRequestProperty("device_id", imei);
-                    Log.d(TAG, "Params: " + strings[0] + ", " + strings[1]);
-                    if (strings[0].equals(CODE_TO_TOKEN_URL)) {
-                    	conn.addRequestProperty("code", strings[1]);
-//                        nameValuePairs.add(new BasicNameValuePair("code", strings[1]));
-                    } else if (strings[0].equals(REFRESH_TOKEN_URL)) {
-                    	conn.addRequestProperty("refresh_token", strings[1]);
-//                        nameValuePairs.add(new BasicNameValuePair("refresh_token", strings[1]));
-                    } else if (strings[0].equals(SET_GCM_ID_URL)) {
-                    	conn.addRequestProperty("gcm_id", getRegistrationId(context));
-                    	conn.addRequestProperty("bearer_token", strings[1]);
-//                        nameValuePairs.add(new BasicNameValuePair("gcm_id", getRegistrationId(context)));
-//                        nameValuePairs.add(new BasicNameValuePair("bearer_token", strings[1]));
-                    }
-//                    for (BasicNameValuePair nvp : nameValuePairs) {
-//                        Log.d(TAG, nvp.getName() + " : " + nvp.getValue());
-//                    }
-
-//                    httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-//                    Log.d(TAG, httppost.getURI() + " "+ httppost.);
-                    
-                    for (String key : conn.getRequestProperties().keySet()) {
-						Log.d(TAG, key+": "+conn.getRequestProperty(key));
-					}
-                    
-                    Log.d(TAG, url.toString());
-                    
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         	        conn.setReadTimeout(10000 /* milliseconds */);
         	        conn.setConnectTimeout(15000 /* milliseconds */);
-        	        conn.setRequestMethod("GET");
+        	        conn.setRequestMethod("POST");
         	        conn.setDoInput(true);
+        	        conn.setDoOutput(true);
+                    conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    
+                    ArrayList<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
+                    nameValuePairs.add(new BasicNameValuePair("client_id", Secret.CLIENT_ID));
+                    nameValuePairs.add(new BasicNameValuePair("client_secret", Secret.CLIENT_SECRET));
+                    
+                    TelephonyManager tm = (TelephonyManager)context.getSystemService(TELEPHONY_SERVICE);
+                    String imei = tm.getDeviceId();
+                    nameValuePairs.add(new BasicNameValuePair("device_id", imei));
+                    
+                    Log.d(TAG, "Params: " + strings[0] + ", " + strings[1]);
+                    if (strings[0].equals(CODE_TO_TOKEN_URL)) {
+                        nameValuePairs.add(new BasicNameValuePair("code", strings[1]));
+                    } else if (strings[0].equals(REFRESH_TOKEN_URL)) {
+                        nameValuePairs.add(new BasicNameValuePair("refresh_token", strings[1]));
+                    } else if (strings[0].equals(SET_GCM_ID_URL)) {
+                        nameValuePairs.add(new BasicNameValuePair("gcm_id", getRegistrationId(context)));
+                        nameValuePairs.add(new BasicNameValuePair("bearer_token", strings[1]));
+                    }
+                    for (BasicNameValuePair nvp : nameValuePairs) {
+                        Log.d(TAG, nvp.getName() + " : " + nvp.getValue());
+                    }
+                    UrlEncodedFormEntity form = new UrlEncodedFormEntity(nameValuePairs);
+                    
+                    
+                    Log.d(TAG, url.toString()+" "+form.toString());
+                    
         	        // Starts the query
         	        conn.connect();
+        	        is = conn.getInputStream();
+        	        os = conn.getOutputStream();
                     
-        	        java.util.Scanner s = new java.util.Scanner(conn.getInputStream(), "utf-8").useDelimiter("\\A");
+        	        form.writeTo(os);
+        	        
+        	        // Stupid scanner trick to make it read the input string.
+        	        java.util.Scanner s = new java.util.Scanner(is, "utf-8").useDelimiter("\\A");
         	        String responseString = s.hasNext() ? s.next() : "";
         	        
-//                    HttpResponse response = httpclient.execute(httppost);
-//                    String responseString = inputStreamToString(response.getEntity().getContent()).toString();
+        	        conn.disconnect();
 
 
                     processResponse(strings[0], responseString);
@@ -475,6 +450,20 @@ public class RegistrationHandler extends Service {
                 } catch (IOException e) {
                     e.printStackTrace();  
                 } finally {
+                	if (is != null) {
+                		try {
+							is.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+                	}
+                	if (os != null) {
+                		try {
+							os.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+                	}
                 	synchronized (registrationLock) {
                 		registrationLock.notifyAll();
 					}
@@ -484,7 +473,8 @@ public class RegistrationHandler extends Service {
         }.execute(api_url, extra_param, null);
 
     }
-
+    
+    
     private void cancelNotification() {
         if (am != null) {
             am.cancel(pi);
@@ -501,12 +491,13 @@ public class RegistrationHandler extends Service {
         try {
             JSONObject o = new JSONObject(response);
             if (o.has("error")) {
-                Log.e(TAG, "Response contains error");
-                if (response.contains("No such code")) {
+                Log.e(TAG, "Response contains error " + o.toString());
+                if (response.contains("No such code") || response.contains("code is expired")) {
                     Log.e(TAG, "Code not found, invalidate code");
                     SharedPreferences.Editor editor = systemPrefs.edit();
                     editor.putString(PROPERTY_SENSIBLE_CODE, "");
                     editor.commit();
+                    
                     handleRegistration();
                     return;
                 }
