@@ -63,7 +63,7 @@
         
         
         <activity
-            android:name="dk.dtu.sensible.economicsgames.PGGActivity"
+            android:name="dk.dtu.sensible.economicsgames.GameActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
             android:theme="@style/FullscreenTheme" >

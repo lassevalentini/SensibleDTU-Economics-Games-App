@@ -430,11 +430,12 @@ public class RegistrationHandler extends Service {
                     
         	        // Starts the query
         	        conn.connect();
-        	        is = conn.getInputStream();
         	        os = conn.getOutputStream();
                     
         	        form.writeTo(os);
+        	        os.close();
         	        
+        	        is = conn.getInputStream();
         	        // Stupid scanner trick to make it read the input string.
         	        java.util.Scanner s = new java.util.Scanner(is, "utf-8").useDelimiter("\\A");
         	        String responseString = s.hasNext() ? s.next() : "";

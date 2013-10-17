@@ -90,6 +90,7 @@ public class MainActivity extends Activity {
 			
 			listMsg.add(i, new MessageItem(
 					results.getInt(idIndex),
+					results.getString(typeIndex),
 					CurrentGamesDatabaseHelper.gameTypeToString(results.getString(typeIndex), true), 
 					results.getLong(startedIndex), 
 					"Participants: "+results.getInt(participantsIndex)));
@@ -129,10 +130,12 @@ public class MainActivity extends Activity {
 		listview.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-				Intent dialogIntent = new Intent(getBaseContext(), PGGActivity.class);
+				Log.d(TAG, "pressed pos: "+pos+" type: "+listMsg.get(pos).type);
+				Intent dialogIntent = new Intent(getBaseContext(), GameActivity.class);
 		        dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		        
+
 		        dialogIntent.putExtra("id", listMsg.get(pos).id);
+		        dialogIntent.putExtra("type", listMsg.get(pos).type);
 		        
 		        getApplication().startActivity(dialogIntent);
 			}
@@ -156,16 +159,20 @@ public class MainActivity extends Activity {
             setStatus("No network connection available.");
         }
         
+		startService();
+
+	}
+	
+	
+	private void startService() {
 		if (!serviceRunning) {
 			serviceRunning = true;
 			LauncherReceiver.startService(this, RegistrationHandler.class);
 		} else {
 			Log.d(TAG, "Not starting the service again");
 		}
-
 	}
-	
-	
+
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 	    super.onConfigurationChanged(newConfig);
@@ -179,29 +186,33 @@ public class MainActivity extends Activity {
 //		super.onPause();
 //	}
 //	
-//	@Override
-//	protected void onResume() {
+	@Override
+	protected void onResume() {
 //		LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
 //				new IntentFilter(GcmBroadcastReceiver.EVENT_MSG_RECEIVED));
-//		super.onResume();
-//	}
+		super.onResume();
+		startService(); // Make sure to be logged in even if something went wrong.
+	}
 
 
 	class MessageItem {
 		
-		public MessageItem(int id, String title, long timestamp, String body) {
+		
+		public MessageItem(int id, String type, String title, long timestamp, String body) {
 			this.id = id;
 			this.title = title;
+			this.type = type;
 			Calendar cal = GregorianCalendar.getInstance();
 			cal.setTimeInMillis(timestamp * 1000);
 			java.text.DateFormat dateFormat = DateFormat.getDateTimeInstance();
 			this.date = dateFormat.format(cal.getTime());
 			this.body = body;
 			
-			Log.d(TAG, timestamp + " => "+date);
+//			Log.d(TAG, timestamp + " => "+date);
 		}
 		
 		int id;
+		String type;
 		String title;
 		String date;
 		String body;
@@ -264,18 +275,21 @@ public class MainActivity extends Activity {
 				} catch (InterruptedException e) {}
         	}
         	Log.d(TAG, "Registration status after: "+ RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()));
+        	String token = RegistrationHandler.getSensibleToken(getApplicationContext());
         	
-        	
-        	urls[0] += "?bearer_token="+RegistrationHandler.getSensibleToken(getApplicationContext());
-        	Log.d(TAG, "Fetching "+urls[0]);
-        	
-//        	((ProgressBar) findViewById(R.id.mainProgressBar)).setVisibility(View.VISIBLE);
-        	
-            try {
-                return downloadUrl(urls[0]);
-            } catch (IOException e) {
-                return "Unable to retrieve web page. URL may be invalid.";
-            }
+        	if (token != null && token.length() > 0) {
+	        	urls[0] += "?bearer_token="+RegistrationHandler.getSensibleToken(getApplicationContext());
+	        	Log.d(TAG, "Fetching "+urls[0]);
+	        	
+	//        	((ProgressBar) findViewById(R.id.mainProgressBar)).setVisibility(View.VISIBLE);
+	        	
+	            try {
+	                return downloadUrl(urls[0]);
+	            } catch (IOException e) {
+	                return "Unable to retrieve web page. URL may be invalid.";
+	            }
+        	} 
+        	return "Not authenticated yet"; 
         }
         
         
@@ -290,6 +304,8 @@ public class MainActivity extends Activity {
 				
 				CurrentGamesDatabaseHelper dbHelper = new CurrentGamesDatabaseHelper(getApplicationContext());
 				SQLiteDatabase db = dbHelper.getWritableDatabase();
+				
+				//TODO: Instead of just updating, it needs to do a sync (check if each id is there and update if it is and remove if they are not there)
 				
 				for (int i = 0; i<current.length(); i++) {
 					JSONObject entry = current.getJSONObject(i);

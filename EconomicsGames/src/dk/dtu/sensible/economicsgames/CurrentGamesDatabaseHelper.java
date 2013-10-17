@@ -40,9 +40,9 @@ public class CurrentGamesDatabaseHelper extends SQLiteOpenHelper {
 	}
 
 	public static String gameTypeToString(String type, boolean capitalize) {
-		if (type.equals("pgg")) {
-			return (capitalize ? "P" : "p")+"ublic goods game";
-		} else if (type.equals("dg")) {
+		if (type.equalsIgnoreCase("pgg")) {
+			return (capitalize ? "P" : "p")+"ublic good game";
+		} else if (type.equalsIgnoreCase("dg")) {
 			return (capitalize ? "D" : "D")+"ictator game";
 		}
 		return "unknown game";
