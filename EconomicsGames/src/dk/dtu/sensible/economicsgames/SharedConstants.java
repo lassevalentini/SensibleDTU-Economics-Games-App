@@ -14,4 +14,6 @@ public final class SharedConstants {
     
     public static final String DATABASE_NAME = "economics_games_db";
     
+    
+    public static final String CONNECTOR_URL = DOMAIN_URL + "sensible-dtu/connectors/connector_economics/";
 }

@@ -16,6 +16,7 @@ import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import dk.dtu.sensible.economicsgames.R;
+import dk.dtu.sensible.economicsgames.util.UrlHelper;
 
 //import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -41,6 +42,8 @@ import java.net.URL;
 import java.security.cert.CertificateException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ssl.HostnameVerifier;
@@ -389,61 +392,27 @@ public class RegistrationHandler extends Service {
             @Override
             protected Double doInBackground(String... strings) {
             	
-            	InputStream is = null;
-            	OutputStream os = null;
-            	
                 try {
-
-        	        URL url = new URL(strings[0]);
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        	        conn.setReadTimeout(10000 /* milliseconds */);
-        	        conn.setConnectTimeout(15000 /* milliseconds */);
-        	        conn.setRequestMethod("POST");
-        	        conn.setDoInput(true);
-        	        conn.setDoOutput(true);
-                    conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    Map<String, String> postData = new HashMap<String, String>();
                     
-                    ArrayList<BasicNameValuePair> nameValuePairs = new ArrayList<BasicNameValuePair>();
-                    nameValuePairs.add(new BasicNameValuePair("client_id", Secret.CLIENT_ID));
-                    nameValuePairs.add(new BasicNameValuePair("client_secret", Secret.CLIENT_SECRET));
+                    postData.put("client_id", Secret.CLIENT_ID);
+                    postData.put("client_secret", Secret.CLIENT_SECRET);
                     
                     TelephonyManager tm = (TelephonyManager)context.getSystemService(TELEPHONY_SERVICE);
                     String imei = tm.getDeviceId();
-                    nameValuePairs.add(new BasicNameValuePair("device_id", imei));
+                    postData.put("device_id", imei);
                     
                     Log.d(TAG, "Params: " + strings[0] + ", " + strings[1]);
                     if (strings[0].equals(CODE_TO_TOKEN_URL)) {
-                        nameValuePairs.add(new BasicNameValuePair("code", strings[1]));
+                    	postData.put("code", strings[1]);
                     } else if (strings[0].equals(REFRESH_TOKEN_URL)) {
-                        nameValuePairs.add(new BasicNameValuePair("refresh_token", strings[1]));
+                    	postData.put("refresh_token", strings[1]);
                     } else if (strings[0].equals(SET_GCM_ID_URL)) {
-                        nameValuePairs.add(new BasicNameValuePair("gcm_id", getRegistrationId(context)));
-                        nameValuePairs.add(new BasicNameValuePair("bearer_token", strings[1]));
+                    	postData.put("gcm_id", getRegistrationId(context));
+                    	postData.put("bearer_token", strings[1]);
                     }
-                    for (BasicNameValuePair nvp : nameValuePairs) {
-                        Log.d(TAG, nvp.getName() + " : " + nvp.getValue());
-                    }
-                    UrlEncodedFormEntity form = new UrlEncodedFormEntity(nameValuePairs);
-                    
-                    
-                    Log.d(TAG, url.toString()+" "+form.toString());
-                    
-        	        // Starts the query
-        	        conn.connect();
-        	        os = conn.getOutputStream();
-                    
-        	        form.writeTo(os);
-        	        os.close();
-        	        
-        	        is = conn.getInputStream();
-        	        // Stupid scanner trick to make it read the input string.
-        	        java.util.Scanner s = new java.util.Scanner(is, "utf-8").useDelimiter("\\A");
-        	        String responseString = s.hasNext() ? s.next() : "";
-        	        
-        	        conn.disconnect();
 
-
-                    processResponse(strings[0], responseString);
+                    processResponse(strings[0], UrlHelper.post(strings[0], postData));
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();  
                 } catch (ClientProtocolException e) {
@@ -451,20 +420,6 @@ public class RegistrationHandler extends Service {
                 } catch (IOException e) {
                     e.printStackTrace();  
                 } finally {
-                	if (is != null) {
-                		try {
-							is.close();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-                	}
-                	if (os != null) {
-                		try {
-							os.close();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-                	}
                 	synchronized (registrationLock) {
                 		registrationLock.notifyAll();
 					}

@@ -10,7 +10,9 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -24,6 +26,7 @@ import org.json.JSONObject;
 
 import dk.dtu.sensible.economicsgames.R;
 import dk.dtu.sensible.economicsgames.RegistrationHandler.SensibleRegistrationStatus;
+import dk.dtu.sensible.economicsgames.util.UrlHelper;
 
 import android.app.Activity;
 import android.content.ContentValues;
@@ -114,7 +117,7 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.main_layout);
 		
 		trustAllHosts(); // During devel - disables ssl warnings etc.
-
+		
 		listview = (ListView) findViewById(R.id.listMessages);
 		listMsg = new ArrayList<MessageItem>();
 		listAdapter = new MessagesAdapter(this, listMsg);
@@ -136,6 +139,7 @@ public class MainActivity extends Activity {
 		
 		updateListView();
 		
+		// TODO: hide current games label and display spinner if not authenticated.
 	}
 
 	
@@ -146,8 +150,7 @@ public class MainActivity extends Activity {
 		ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
-            new DownloadListTask().execute(SharedConstants.DOMAIN_URL + 
-            		"sensible-dtu/connectors/connector_economics/list/");
+            new DownloadListTask().execute();
         } else {
             setStatus("No network connection available.");
         }
@@ -236,25 +239,13 @@ public class MainActivity extends Activity {
 			final TextView tvTitle = (TextView) viewMsg.findViewById(R.id.messageTitle);
 			tvTitle.setText(values.get(position).title);
 			
-//			viewMsg.setOnClickListener(new OnClickListener() {
-//				
-//				@Override
-//				public void onClick(View view) {
-//					int pos = viewMsg.getPositionForView(view);
-//					Intent dialogIntent = new Intent(getBaseContext(), PGGActivity.class);
-//			        dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//			        
-//			        dialogIntent.putExtra("id", 1);
-//			        getApplication().startActivity(dialogIntent);
-//				}
-//			});
 			return viewMsg;
 		}
 	}
 	
-	private class DownloadListTask extends AsyncTask<String, Integer, String> {
+	private class DownloadListTask extends AsyncTask<Void, Integer, String> {
         @Override
-        protected String doInBackground(String... urls) {
+        protected String doInBackground(Void... v) {
         	Log.d(TAG, "Registration status: "+ RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()));
         	long startTime = System.currentTimeMillis();
         	
@@ -268,20 +259,25 @@ public class MainActivity extends Activity {
 				} catch (InterruptedException e) {}
         	}
         	Log.d(TAG, "Registration status after: "+ RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()));
+        	
         	String token = RegistrationHandler.getSensibleToken(getApplicationContext());
         	
+        	Map<String, String> getMap = new HashMap<String, String>();
+    		getMap.put("bearer_token", token);
+    		
         	if (token != null && token.length() > 0) {
-	        	urls[0] += "?bearer_token="+RegistrationHandler.getSensibleToken(getApplicationContext());
-	        	Log.d(TAG, "Fetching "+urls[0]);
-	        	
+        		
 	//        	((ProgressBar) findViewById(R.id.mainProgressBar)).setVisibility(View.VISIBLE);
 	        	
 	            try {
-	                return downloadUrl(urls[0]);
+	                return UrlHelper.get(SharedConstants.CONNECTOR_URL+"list/", getMap);
 	            } catch (IOException e) {
+	            	Log.e(TAG, "Error GETing "+getMap+" from "+SharedConstants.CONNECTOR_URL+"list/: "+e.getMessage());
+					e.printStackTrace();
 	                return "Unable to retrieve web page. URL may be invalid.";
 	            }
         	} 
+        	Log.e(TAG, "Not authenticated yet. Tried GETing "+getMap+" from "+SharedConstants.CONNECTOR_URL+"list/");
         	return "Not authenticated yet"; 
         }
         
@@ -326,39 +322,6 @@ public class MainActivity extends Activity {
        }
     }
 	
-	private String downloadUrl(String myurl) throws IOException {
-	    
-		InputStream is = null;
-
-	    try {
-	        URL url = new URL(myurl);
-	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-	        conn.setReadTimeout(10000 /* milliseconds */);
-	        conn.setConnectTimeout(15000 /* milliseconds */);
-	        conn.setRequestMethod("GET");
-	        conn.setDoInput(true);
-	        // Starts the query
-	        conn.connect();
-	        int response = conn.getResponseCode();
-	        Log.d(TAG, "list response: " + response);
-	        is = conn.getInputStream();
-	        
-	        // Stupid scanner trick to make it read the input string.
-	        java.util.Scanner s = new java.util.Scanner(is, "utf-8").useDelimiter("\\A");
-	        String result = s.hasNext() ? s.next() : "";
-	        
-	        conn.disconnect();
-	        
-	        return result;
-	        
-	    // Makes sure that the InputStream is closed after the app is
-	    // finished using it.
-	    } finally {
-	        if (is != null) {
-	            is.close();
-	        } 
-	    }
-	}
 	
 
     private static void trustAllHosts() {

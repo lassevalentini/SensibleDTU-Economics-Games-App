@@ -1,18 +1,19 @@
 package dk.dtu.sensible.economicsgames;
 
-import dk.dtu.sensible.economicsgames.util.SystemUiHider;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-import android.annotation.TargetApi;
+import dk.dtu.sensible.economicsgames.util.SystemUiHider;
+import dk.dtu.sensible.economicsgames.util.UrlHelper;
+
 import android.app.Activity;
-import android.os.Build;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.TextView;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -54,8 +55,7 @@ public class GameActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				finish();
+				answer("keep");
 			}
 		});
         
@@ -64,8 +64,7 @@ public class GameActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				finish();
+				answer("share");
 			}
 		});
     }
@@ -75,6 +74,41 @@ public class GameActivity extends Activity {
         super.onPostCreate(savedInstanceState);
         
     }
+    
+    private void answer(String answer) {
+    	(new PostResponseTask()).execute(""+id, answer);
+		finish();
+    }
+    
+    private class PostResponseTask extends AsyncTask<String, Integer, String> {
+        @Override
+        protected String doInBackground(String... args) {
+        	String id = args[0];
+        	String answer = args[1];
+        	String token = RegistrationHandler.getSensibleToken(getApplicationContext());
+        	
+        	Map<String, String> dataMap = new HashMap<String, String>();
+    		dataMap.put("bearer_token", RegistrationHandler.getSensibleToken(getApplicationContext()));
+    		dataMap.put("id", id);
+    		dataMap.put("answer", answer);
+        	
+        	if (token != null && token.length() > 0) {
+        		try {
+	                return UrlHelper.post(SharedConstants.CONNECTOR_URL+"answer/", dataMap);
+	            } catch (IOException e) {
+	            	Log.e(TAG, "Error posting "+dataMap+" to "+SharedConstants.CONNECTOR_URL+"answer/: "+e.getMessage());
+					e.printStackTrace();
+	                return "Unable to retrieve web page. URL may be invalid.";
+	            }
+        	} 
+        	Log.e(TAG, "Not authenticated yet. Tried posting "+dataMap+" to "+SharedConstants.CONNECTOR_URL+"answer/");
+        	return "Not authenticated yet"; 
+        }
+        
 
-
+        @Override
+        protected void onPostExecute(String result) {
+        	
+       }
+    }
 }
