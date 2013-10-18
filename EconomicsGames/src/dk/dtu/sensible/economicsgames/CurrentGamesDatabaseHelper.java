@@ -1,6 +1,8 @@
 package dk.dtu.sensible.economicsgames;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -22,7 +24,7 @@ public class CurrentGamesDatabaseHelper extends SQLiteOpenHelper {
                     	GAME_STARTED + " INTEGER, " +
                     	GAME_OPENED + " INTEGER);";
 
-
+    
 	CurrentGamesDatabaseHelper(Context context) {
         super(context, SharedConstants.DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -39,13 +41,74 @@ public class CurrentGamesDatabaseHelper extends SQLiteOpenHelper {
 		
 	}
 
-	public static String gameTypeToString(String type, boolean capitalize) {
-		if (type.equalsIgnoreCase("pgg")) {
-			return (capitalize ? "P" : "p")+"ublic good game";
-		} else if (type.equalsIgnoreCase("dg")) {
-			return (capitalize ? "D" : "D")+"ictator game";
+	public static Game getGame(SQLiteDatabase db, int id) {
+		Cursor cursor = db.query(TABLE_NAME, null, "id="+id, null, null, null, null);
+		
+		if (cursor.getCount() < 1) {
+			return null;
 		}
-		return "unknown game";
+		return new Game(cursor);
+	}
+	
+//	public static Game[] getGamesNotIn(SQLiteDatabase db, int[] ids) {
+//		String idString = new String();
+//		
+//		for (int id : ids) {
+//			if (idString.length() > 0) {
+//				idString += ",";
+//			}
+//			idString += id;
+//		}
+//		
+//		Cursor cursor = db.query(TABLE_NAME, null, "id NOT IN ("+idString+")", null, null, null, null);
+//		
+//		Game[] games = new Game[cursor.getCount()];
+//		
+//		for (int i = 0; i < games.length; i++) {
+//			games[i] = new Game(cursor);
+//		}
+//		
+//		return games;
+//	}
+	
+	public static void removeGamesNotIn(SQLiteDatabase db, int[] ids) {
+		String idString = new String();
+		
+		for (int id : ids) {
+			if (idString.length() > 0) {
+				idString += ",";
+			}
+			idString += id;
+		}
+		
+		db.delete(TABLE_NAME, "id NOT IN ("+idString+")", null);
+	}
+
+	public static void insertGame(SQLiteDatabase db, int id, String type, int started, int opened, int participants) {
+
+		//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
+		db.insertWithOnConflict(TABLE_NAME, 
+				null, 
+				getValues(id, type, started, opened, participants), 
+				SQLiteDatabase.CONFLICT_IGNORE);
+	}
+	
+	public static void updateGame(SQLiteDatabase db, int id, String type, int started, int opened, int participants) {
+		//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
+		db.update(TABLE_NAME, 
+				getValues(id, type, started, opened, participants), 
+				"id="+id,
+				null);
+	}
+	
+	public static ContentValues getValues(int id, String type, int started, int opened, int participants) {
+		ContentValues values = new ContentValues();
+		values.put(GAME_ID, id);
+		values.put(GAME_TYPE, type);
+		values.put(GAME_STARTED, started);
+		values.put(GAME_OPENED, opened);
+		values.put(GAME_PARTICIPANTS, participants);
+		return values;
 	}
 
 }

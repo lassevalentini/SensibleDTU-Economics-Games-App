@@ -23,9 +23,9 @@ package dk.dtu.sensible.economicsgames;
 
 import android.os.Bundle;
 import com.google.gson.*;
-import edu.mit.media.funf.Utils;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.Map;
  
 public class JsonUtils {
@@ -37,11 +37,22 @@ public class JsonUtils {
 	public static class BundleJsonSerializer implements JsonSerializer<Bundle> {
 		public JsonElement serialize(Bundle bundle, Type type, JsonSerializationContext context) {
 			JsonObject object = new JsonObject();
-			for (Map.Entry<String, Object> entry : Utils.getValues(bundle).entrySet()) {
+			for (Map.Entry<String, Object> entry : getValues(bundle).entrySet()) {
 				object.add(entry.getKey(), context.serialize(entry.getValue()));
 			}
 			return object;
 		}
 	}
+	
+	public static Map<String,Object> getValues(final Bundle bundle) {
+        HashMap<String, Object> values = new HashMap<String, Object>();
+        if (bundle == null) {
+                return values;
+        }
+        for (String key : bundle.keySet()) {
+                values.put(key, bundle.get(key));
+        }
+        return values;
+}
 }
   

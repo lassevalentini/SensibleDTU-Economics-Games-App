@@ -42,32 +42,32 @@ public class GameActivity extends Activity {
         if (type.equalsIgnoreCase("pgg")) {
         	setContentView(R.layout.pgg_layout);
 
-        	Button keepButton = (Button) findViewById(R.id.keepButton);
-            keepButton.setOnClickListener(new OnClickListener() {
-				
-				@Override
-				public void onClick(View v) {
-					// TODO Auto-generated method stub
-					finish();
-				}
-			});
-            
-            Button shareButton = (Button) findViewById(R.id.shareButton);
-            shareButton.setOnClickListener(new OnClickListener() {
-				
-				@Override
-				public void onClick(View v) {
-					// TODO Auto-generated method stub
-					finish();
-				}
-			});
             
         } else if (type.equalsIgnoreCase("dg")) {
-        	setContentView(R.layout.pgg_layout);
+        	setContentView(R.layout.dg_layout);
         	
         } 
         
+
+    	Button keepButton = (Button) findViewById(R.id.keepButton);
+        keepButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				finish();
+			}
+		});
         
+        Button shareButton = (Button) findViewById(R.id.shareButton);
+        shareButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				finish();
+			}
+		});
     }
 
     @Override

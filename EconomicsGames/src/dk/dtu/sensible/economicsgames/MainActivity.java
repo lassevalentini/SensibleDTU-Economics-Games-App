@@ -40,20 +40,18 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
 	private static final String TAG = "AUTH_MainActivity";
 	private static boolean serviceRunning = false;
+	
 
 	private List<MessageItem> listMsg;
 	private MessagesAdapter listAdapter;
@@ -68,10 +66,11 @@ public class MainActivity extends Activity {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		
 		Cursor results = db.query(CurrentGamesDatabaseHelper.TABLE_NAME, 
-				new String[]{CurrentGamesDatabaseHelper.GAME_ID, // Selected cols
-					CurrentGamesDatabaseHelper.GAME_TYPE,
-					CurrentGamesDatabaseHelper.GAME_STARTED, 
-					CurrentGamesDatabaseHelper.GAME_PARTICIPANTS}, 
+//				new String[]{CurrentGamesDatabaseHelper.GAME_ID, // Selected cols
+//					CurrentGamesDatabaseHelper.GAME_TYPE,
+//					CurrentGamesDatabaseHelper.GAME_STARTED, 
+//					CurrentGamesDatabaseHelper.GAME_PARTICIPANTS}, 
+				null, // select all cols - easier, and only an int that is possibly read too much
 				null, // Where clause - select all 
 				null, // Selection args 
 				null, // Group by
@@ -80,20 +79,14 @@ public class MainActivity extends Activity {
 		
 		
 		for (int i = 0; i<results.getCount(); i++) {
-			results.moveToNext();
-			
-			int idIndex = results.getColumnIndex(CurrentGamesDatabaseHelper.GAME_ID);
-			int typeIndex = results.getColumnIndex(CurrentGamesDatabaseHelper.GAME_TYPE);
-			int startedIndex = results.getColumnIndex(CurrentGamesDatabaseHelper.GAME_STARTED);
-			int participantsIndex = results.getColumnIndex(CurrentGamesDatabaseHelper.GAME_PARTICIPANTS);
-			
+			Game game = new Game(results); // also moves cursor to next
 			
 			listMsg.add(i, new MessageItem(
-					results.getInt(idIndex),
-					results.getString(typeIndex),
-					CurrentGamesDatabaseHelper.gameTypeToString(results.getString(typeIndex), true), 
-					results.getLong(startedIndex), 
-					"Participants: "+results.getInt(participantsIndex)));
+					game.id,
+					game.type,
+					game.gameTypeToDescriptiveString(true), 
+					game.started, 
+					"Participants: "+game.participants));
 			
 		}
 		
@@ -305,20 +298,26 @@ public class MainActivity extends Activity {
 				CurrentGamesDatabaseHelper dbHelper = new CurrentGamesDatabaseHelper(getApplicationContext());
 				SQLiteDatabase db = dbHelper.getWritableDatabase();
 				
-				//TODO: Instead of just updating, it needs to do a sync (check if each id is there and update if it is and remove if they are not there)
+				// Current ids - for removing non-current games.
+				int[] ids = new int[current.length()];
 				
 				for (int i = 0; i<current.length(); i++) {
 					JSONObject entry = current.getJSONObject(i);
-					ContentValues values = new ContentValues();
-					values.put(CurrentGamesDatabaseHelper.GAME_ID, entry.getLong("id"));
-					values.put(CurrentGamesDatabaseHelper.GAME_TYPE, entry.getString("type"));
-					values.put(CurrentGamesDatabaseHelper.GAME_STARTED, entry.getInt("started"));
-					values.put(CurrentGamesDatabaseHelper.GAME_OPENED, 0);
-					values.put(CurrentGamesDatabaseHelper.GAME_PARTICIPANTS, entry.getInt("participants"));
 					
-					//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
-					db.insertWithOnConflict(CurrentGamesDatabaseHelper.TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+					ids[i] = entry.getInt("id");
+					
+					Game game = CurrentGamesDatabaseHelper.getGame(db, entry.getInt("id"));
+					
+					// Update some values if game exists (the "INSERT ... ON DUPLICATE KEY UPDATE" in sqlite is not flexible)
+					if (game == null) {
+						CurrentGamesDatabaseHelper.insertGame(db, entry.getInt("id"), entry.getString("type"), entry.getInt("started"), 0, entry.getInt("participants"));
+					} else {					
+						CurrentGamesDatabaseHelper.updateGame(db, entry.getInt("id"), entry.getString("type"), entry.getInt("started"), game.opened, entry.getInt("participants"));
+					}
 				}
+				
+				CurrentGamesDatabaseHelper.removeGamesNotIn(db, ids);
+				
 				updateListView();
 			} catch (JSONException e) {
 				e.printStackTrace();
