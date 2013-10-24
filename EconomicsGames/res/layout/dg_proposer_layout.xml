@@ -4,31 +4,40 @@
     android:layout_height="match_parent"
     tools:context=".GameActivity" >
 
-    
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="10dp"
         android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/fullscreen_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:keepScreenOn="true"
+            android:text="@string/dg_description" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="10sp" />
         
-	    <TextView
-	        android:id="@+id/fullscreen_content"
-	        android:layout_width="match_parent"
-	        android:layout_height="match_parent"
-	        android:keepScreenOn="true"
-	        android:text="@string/pgg_description" />
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="You are the proposer." />
+
+    </LinearLayout>
+
     
-	</LinearLayout>
-	
     <!--
          This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows.
     -->
-
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true" >
+        android:fitsSystemWindows="true">
 
         <LinearLayout
             android:id="@+id/fullscreen_content_controls"
@@ -41,21 +50,31 @@
             tools:ignore="UselessParent" >
 
             <Button
-                android:id="@+id/shareButton"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/share_button" />
-
-            <Button
                 android:id="@+id/keepButton"
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/keep_button" />
+                android:text="@string/dg_keep_button" />
+
+            <Button
+                android:id="@+id/splitButton"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/split_button" />
+
+            <Button
+                android:id="@+id/giveButton"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/give_button" />
         </LinearLayout>
+
+
     </FrameLayout>
 
 </FrameLayout>

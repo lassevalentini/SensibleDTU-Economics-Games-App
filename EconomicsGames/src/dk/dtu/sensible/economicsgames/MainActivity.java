@@ -1,14 +1,12 @@
 package dk.dtu.sensible.economicsgames;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
@@ -26,10 +24,10 @@ import org.json.JSONObject;
 
 import dk.dtu.sensible.economicsgames.R;
 import dk.dtu.sensible.economicsgames.RegistrationHandler.SensibleRegistrationStatus;
+import dk.dtu.sensible.economicsgames.util.SerializationUtils;
 import dk.dtu.sensible.economicsgames.util.UrlHelper;
 
 import android.app.Activity;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -47,6 +45,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -60,6 +59,84 @@ public class MainActivity extends Activity {
 	private MessagesAdapter listAdapter;
 	private ListView listview;
 	
+	private long lastUpdate = 0;
+		
+	@Override
+	protected void onStart() {
+		super.onStart();
+		
+		fetchList();
+        
+		startService();
+
+	}
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.main_layout);
+		
+		trustAllHosts(); // During devel - disables ssl warnings etc.
+		
+		listview = (ListView) findViewById(R.id.listMessages);
+		listMsg = new ArrayList<MessageItem>();
+		listAdapter = new MessagesAdapter(this, listMsg);
+		listview.setAdapter(listAdapter);
+		
+		listview.setOnItemClickListener(new OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+				Log.d(TAG, "pressed pos: "+pos+" type: "+listMsg.get(pos).game.type);
+				Intent dialogIntent = new Intent(getBaseContext(), GameActivity.class);
+		        dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		        
+		        
+		        dialogIntent.putExtra("id", listMsg.get(pos).game.id);
+		        dialogIntent.putExtra("type", listMsg.get(pos).game.type);
+		        dialogIntent.putExtra("participants", listMsg.get(pos).game.participants);
+		        dialogIntent.putExtra("game", SerializationUtils.serialize(listMsg.get(pos).game));
+		        
+		        getApplication().startActivity(dialogIntent);
+			}
+		});
+
+		if (RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()) == SensibleRegistrationStatus.REGISTERED) {
+			updateListView();
+		} else {
+			TextView textView = (TextView) findViewById(R.id.mainTopText);
+			textView.setText("Please Wait");
+		}
+		
+		// TODO: hide current games label and display spinner if not authenticated.
+	}
+
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+	    super.onConfigurationChanged(newConfig);
+	    Log.d(TAG, "Configuration changed");
+	    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+	}
+	
+//	@Override
+//	protected void onPause() {
+//		LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+//		super.onPause();
+//	}
+//	
+	@Override
+	protected void onResume() {
+//		LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
+//				new IntentFilter(GcmBroadcastReceiver.EVENT_MSG_RECEIVED));
+		super.onResume();
+		startService(); // Make sure to be logged in even if something went wrong.
+		setStatus("");
+		
+		fetchList();
+		updateListView();
+	}
+
+
 	
 	private void updateListView() {
 		// Should probably use a SimpleCursorAdapter instead. But now it's working, and it's not going to be a performance issue.
@@ -85,14 +162,14 @@ public class MainActivity extends Activity {
 			Game game = new Game(results); // also moves cursor to next
 			
 			listMsg.add(i, new MessageItem(
-					game.id,
-					game.type,
 					game.gameTypeToDescriptiveString(true), 
 					game.started, 
-					"Participants: "+game.participants));
+					"Participants: "+game.participants,
+					game));
 			
 		}
-		
+
+		dbHelper.close();
 		listAdapter.notifyDataSetChanged();
 	}
 
@@ -110,53 +187,19 @@ public class MainActivity extends Activity {
 		}
 		// TODO: make a runnable that can wait 10 sec and remove the status. Pass status as a parameter so that it doesnt remove new statuses.
 	}
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main_layout);
-		
-		trustAllHosts(); // During devel - disables ssl warnings etc.
-		
-		listview = (ListView) findViewById(R.id.listMessages);
-		listMsg = new ArrayList<MessageItem>();
-		listAdapter = new MessagesAdapter(this, listMsg);
-		listview.setAdapter(listAdapter);
-		
-		listview.setOnItemClickListener(new OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-				Log.d(TAG, "pressed pos: "+pos+" type: "+listMsg.get(pos).type);
-				Intent dialogIntent = new Intent(getBaseContext(), GameActivity.class);
-		        dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-		        dialogIntent.putExtra("id", listMsg.get(pos).id);
-		        dialogIntent.putExtra("type", listMsg.get(pos).type);
-		        
-		        getApplication().startActivity(dialogIntent);
-			}
-		});
-		
-		updateListView();
-		
-		// TODO: hide current games label and display spinner if not authenticated.
-	}
-
 	
-	@Override
-	protected void onStart() {
-		super.onStart();
-
-		ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            new DownloadListTask().execute();
-        } else {
-            setStatus("No network connection available.");
-        }
-        
-		startService();
-
+	private void fetchList() {
+		
+		
+		if (lastUpdate < (System.currentTimeMillis() - 5*60*1000)) {// 5 min
+			ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+	        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+	        if (networkInfo != null && networkInfo.isConnected()) {
+	            new DownloadListTask().execute();
+	        } else {
+	            setStatus("No network connection available.");
+	        }
+		}
 	}
 	
 	
@@ -169,35 +212,21 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	@Override
-	public void onConfigurationChanged(Configuration newConfig) {
-	    super.onConfigurationChanged(newConfig);
-	    Log.d(TAG, "Configuration changed");
-	    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-	}
-	
-//	@Override
-//	protected void onPause() {
-//		LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
-//		super.onPause();
-//	}
-//	
-	@Override
-	protected void onResume() {
-//		LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver,
-//				new IntentFilter(GcmBroadcastReceiver.EVENT_MSG_RECEIVED));
-		super.onResume();
-		startService(); // Make sure to be logged in even if something went wrong.
-	}
-
 
 	class MessageItem {
+
+		String title;
+		String date;
+		String body;
+		Game game;
 		
+		public MessageItem(String title, long timestamp, String body, Game game) {
+			this(title, timestamp, body);
+			this.game = game;
+		}
 		
-		public MessageItem(int id, String type, String title, long timestamp, String body) {
-			this.id = id;
+		public MessageItem(String title, long timestamp, String body) {
 			this.title = title;
-			this.type = type;
 			Calendar cal = GregorianCalendar.getInstance();
 			cal.setTimeInMillis(timestamp * 1000);
 			java.text.DateFormat dateFormat = DateFormat.getDateTimeInstance();
@@ -207,11 +236,6 @@ public class MainActivity extends Activity {
 //			Log.d(TAG, timestamp + " => "+date);
 		}
 		
-		int id;
-		String type;
-		String title;
-		String date;
-		String body;
 	}
 
 	class MessagesAdapter extends ArrayAdapter<MessageItem> {
@@ -229,6 +253,10 @@ public class MainActivity extends Activity {
 		public View getView(final int position, View convertView, ViewGroup parent) {
 			LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			final View viewMsg = inflater.inflate(R.layout.messageitem_layout, parent, false);
+			
+//			For when they will receive questions as well
+//			final ImageView viewImage = (ImageView) viewMsg.findViewById(R.id.imgCollapse);
+//			viewImage.setImageResource(R.drawable.applications_games);
 			
 			final TextView tvDate = (TextView) viewMsg.findViewById(R.id.messageDate);
 			tvDate.setText(values.get(position).date);
@@ -248,6 +276,10 @@ public class MainActivity extends Activity {
         protected String doInBackground(Void... v) {
         	Log.d(TAG, "Registration status: "+ RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()));
         	long startTime = System.currentTimeMillis();
+        	
+        	try {
+				Thread.sleep(10);
+			} catch (InterruptedException e1) {}
         	
         	// Wait up to 30 seconds for the registration to complete
         	while (!RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()).equals(SensibleRegistrationStatus.REGISTERED)
@@ -313,6 +345,10 @@ public class MainActivity extends Activity {
 				}
 				
 				CurrentGamesDatabaseHelper.removeGamesNotIn(db, ids);
+				
+				lastUpdate = System.currentTimeMillis();
+				
+				dbHelper.close();
 				
 				updateListView();
 			} catch (JSONException e) {

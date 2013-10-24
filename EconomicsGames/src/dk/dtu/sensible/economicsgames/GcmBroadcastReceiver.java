@@ -42,23 +42,29 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
         ctx = context;
         Bundle extras = intent.getExtras();
         String messageType = gcm.getMessageType(intent);
-        if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
-//            sendNotification("Send error: " + extras.toString(), AuthActivity.class);
-        } else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED.equals(messageType)) {
-//            sendNotification("Deleted messages on server: " +	extras.toString(), AuthActivity.class);
-        } else {
-        	Intent notifyIntent = new Intent(EVENT_MSG_RECEIVED);
-        	notifyIntent.putExtras(extras);
-        	LocalBroadcastManager.getInstance(context).sendBroadcast(notifyIntent);
-
+        
+        if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)){
+//        	Intent notifyIntent = new Intent(EVENT_MSG_RECEIVED);
+//        	notifyIntent.putExtras(extras);
+//        	LocalBroadcastManager.getInstance(context).sendBroadcast(notifyIntent);
+        	
+        	// TODO: Add game to db, get GameActivity working with this
         	// TODO: Change classes based on the extras in the gcm message?
+        	// TODO: add "code won" notification and layout
         	String msgType = intent.getExtras().getString("type");
             Log.d(TAG, "msg-type: " + msgType);
         	if (msgType.equalsIgnoreCase("economics-pgg-init")) {
         		sendNotification(extras.getString("title"), extras.getString("body"), GameActivity.class);
-        	} else {
+        		
+        	} else if (msgType.equalsIgnoreCase("auth")) {
 	            sendNotification(extras.getString("title"), "", AuthActivity.class);
+	            
         	}
+        	
+        } else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED.equals(messageType)) {
+        	// 
+        } else if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
+        	// Not gonna happen - we are not using an xmpp server 
         }
         setResultCode(Activity.RESULT_OK);
     }
@@ -73,7 +79,7 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
 
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(ctx)
-                        .setSmallIcon(R.drawable.red_logo5)
+                        .setSmallIcon(R.drawable.green_logo5)
                         .setContentTitle(title)
                         .setStyle(new NotificationCompat.BigTextStyle()
                                 .bigText(msg))

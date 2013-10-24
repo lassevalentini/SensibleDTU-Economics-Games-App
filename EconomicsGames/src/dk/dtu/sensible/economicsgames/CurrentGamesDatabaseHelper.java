@@ -32,7 +32,9 @@ public class CurrentGamesDatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+    	db.beginTransaction();
         db.execSQL(TABLE_CREATE);
+		db.endTransaction();
     }
 
     
@@ -42,7 +44,9 @@ public class CurrentGamesDatabaseHelper extends SQLiteOpenHelper {
 	}
 
 	public static Game getGame(SQLiteDatabase db, int id) {
+		db.beginTransaction();
 		Cursor cursor = db.query(TABLE_NAME, null, "id="+id, null, null, null, null);
+		db.endTransaction();
 		
 		if (cursor.getCount() < 1) {
 			return null;
@@ -71,6 +75,13 @@ public class CurrentGamesDatabaseHelper extends SQLiteOpenHelper {
 //		return games;
 //	}
 	
+
+	public static void removeGame(SQLiteDatabase db, int id) {
+		db.beginTransaction();
+		db.delete(TABLE_NAME, "id="+id, null);
+		db.endTransaction();
+	}
+	
 	public static void removeGamesNotIn(SQLiteDatabase db, int[] ids) {
 		String idString = new String();
 		
@@ -81,24 +92,29 @@ public class CurrentGamesDatabaseHelper extends SQLiteOpenHelper {
 			idString += id;
 		}
 		
+		db.beginTransaction();
 		db.delete(TABLE_NAME, "id NOT IN ("+idString+")", null);
+		db.endTransaction();
 	}
 
 	public static void insertGame(SQLiteDatabase db, int id, String type, int started, int opened, int participants) {
-
+		db.beginTransaction();
 		//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
 		db.insertWithOnConflict(TABLE_NAME, 
 				null, 
 				getValues(id, type, started, opened, participants), 
 				SQLiteDatabase.CONFLICT_IGNORE);
+		db.endTransaction();
 	}
 	
 	public static void updateGame(SQLiteDatabase db, int id, String type, int started, int opened, int participants) {
+		db.beginTransaction();
 		//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
 		db.update(TABLE_NAME, 
 				getValues(id, type, started, opened, participants), 
 				"id="+id,
 				null);
+		db.endTransaction();
 	}
 	
 	public static ContentValues getValues(int id, String type, int started, int opened, int participants) {

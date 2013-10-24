@@ -2,9 +2,18 @@
 <resources>
 
     <string name="app_name">Economics Games</string>
+    <string name="dg_description">This is a simple game for two players. Player one, the proposer, gets to decide how to split the movie codes between the two. The role of Player two is to receive the decided amount.</string>
+    <string name="pgg_description">You are given a code for a movie. You can now decide what to do with it.
+        \n\nIf you choose "Keep", you get to keep the code.
+        \nIf you choose "Share", you forfeit the code, but two codes will be randomly distributed between all players.
+        \n\nYou are playing with %1$s others.</string> 
+    
     <string name="share_button">Share</string>
-    <string name="dummy_content">Make a decision</string>
     <string name="keep_button">Keep</string>
+    
+    <string name="split_button">Split evenly</string>
+    <string name="dg_keep_button">Keep both</string>
+    <string name="give_button">Give both</string>
 
     <string name="app_ver">v0.1</string>
 </resources>

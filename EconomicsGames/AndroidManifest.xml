@@ -34,7 +34,7 @@
         android:allowBackup="true"
         android:label="@string/app_name" 
         android:largeHeap="true" 
-        android:icon="@drawable/red_logo5"
+        android:icon="@drawable/green_logo5"
         android:theme="@style/AppTheme" >
         
         <service android:name=".MainPipeline"></service>
@@ -66,7 +66,7 @@
             android:name="dk.dtu.sensible.economicsgames.GameActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
-            android:theme="@style/FullscreenTheme" >
+            android:theme="@style/AppTheme" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -74,13 +74,13 @@
             </intent-filter>
         </activity>
         
-        <activity android:name=".MainActivity" android:theme="@style/FullscreenTheme" android:label="@string/app_name" android:configChanges="keyboardHidden|orientation|screenSize" android:screenOrientation="portrait">
+        <activity android:name=".MainActivity" android:theme="@style/AppTheme" android:label="@string/app_name" android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".AuthActivity" android:screenOrientation="portrait"/>
+        <activity android:name=".AuthActivity" android:theme="@style/AppTheme" android:screenOrientation="portrait"/>
     
     </application>
 
