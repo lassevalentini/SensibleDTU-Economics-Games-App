@@ -69,14 +69,11 @@ public class GameActivity extends Activity {
         } 
         
         // TODO: Explanation activity that is shown the first time and then a button to open again.
-        
-        // TODO:  W/SQLiteConnectionPool(1404): A SQLiteConnection object for database '/data/data/dk.dtu.sensible.economicsgames/databases/economics_games_db' was leaked!  Please fix your application to end transactions in progress properly and to close the database when it is no longer needed.
-        // bør være fixet
     	
         
-        CurrentGamesDatabaseHelper dbHelper = new CurrentGamesDatabaseHelper(getApplicationContext());
+        DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
     	SQLiteDatabase db = dbHelper.getWritableDatabase();
-    	CurrentGamesDatabaseHelper.updateGame(db, game.id, game.typeToString(), game.started, (int)(System.currentTimeMillis()*1000), game.participants);
+    	DatabaseHelper.updateGame(db, game.id, game.typeToString(), game.started, (int)(System.currentTimeMillis()*1000), game.participants);
         dbHelper.close();
     }
 
@@ -88,9 +85,9 @@ public class GameActivity extends Activity {
     
     private void answer(String answer) {
     	(new PostResponseTask()).execute(""+game.id, answer);
-    	CurrentGamesDatabaseHelper dbHelper = new CurrentGamesDatabaseHelper(getApplicationContext());
+    	DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
     	SQLiteDatabase db = dbHelper.getWritableDatabase();
-    	CurrentGamesDatabaseHelper.removeGame(db, game.id);
+    	DatabaseHelper.removeGame(db, game.id);
     	dbHelper.close();
 		finish();
     }

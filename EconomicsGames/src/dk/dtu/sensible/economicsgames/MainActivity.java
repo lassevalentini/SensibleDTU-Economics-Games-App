@@ -47,6 +47,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
@@ -57,7 +58,9 @@ public class MainActivity extends Activity {
 
 	private List<MessageItem> listMsg;
 	private MessagesAdapter listAdapter;
-	private ListView listview;
+	
+	private List<MessageItem> listCodes;
+	private MessagesAdapter listCodesAdapter;
 	
 	private long lastUpdate = 0;
 		
@@ -78,38 +81,63 @@ public class MainActivity extends Activity {
 		
 		trustAllHosts(); // During devel - disables ssl warnings etc.
 		
-		listview = (ListView) findViewById(R.id.listMessages);
+		ListView gamesView = (ListView) findViewById(R.id.listMessages);
 		listMsg = new ArrayList<MessageItem>();
 		listAdapter = new MessagesAdapter(this, listMsg);
-		listview.setAdapter(listAdapter);
+		gamesView.setAdapter(listAdapter);
 		
-		listview.setOnItemClickListener(new OnItemClickListener() {
+		gamesView.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
 				Log.d(TAG, "pressed pos: "+pos+" type: "+listMsg.get(pos).game.type);
 				Intent dialogIntent = new Intent(getBaseContext(), GameActivity.class);
 		        dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		        
-		        
-		        dialogIntent.putExtra("id", listMsg.get(pos).game.id);
-		        dialogIntent.putExtra("type", listMsg.get(pos).game.type);
-		        dialogIntent.putExtra("participants", listMsg.get(pos).game.participants);
 		        dialogIntent.putExtra("game", SerializationUtils.serialize(listMsg.get(pos).game));
 		        
 		        getApplication().startActivity(dialogIntent);
 			}
 		});
-
-		if (RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()) == SensibleRegistrationStatus.REGISTERED) {
-			updateListView();
-		} else {
-			TextView textView = (TextView) findViewById(R.id.mainTopText);
-			textView.setText("Please Wait");
-		}
 		
-		// TODO: hide current games label and display spinner if not authenticated.
+		ListView codesView = (ListView) findViewById(R.id.listCodes);
+		listCodes = new ArrayList<MessageItem>();
+		listCodesAdapter = new MessagesAdapter(this, listCodes);
+		codesView.setAdapter(listCodesAdapter);
+		
+//		
+//		CurrentGamesDatabaseHelper dbHelper = new CurrentGamesDatabaseHelper(getApplicationContext());
+//		SQLiteDatabase db = dbHelper.getReadableDatabase();
+//		Cursor cursor = CurrentGamesDatabaseHelper.getGames(db);
+//		dbHelper.close();
+//		SimpleCursorAdapter codesAdapter = new SimpleCursorAdapter(this, 
+//				R.layout.messageitem_layout, 
+//				cursor, 
+//				new String[]{CurrentGamesDatabaseHelper.GAME_TYPE, CurrentGamesDatabaseHelper.GAME_STARTED, CurrentGamesDatabaseHelper.GAME_PARTICIPANTS}, 
+//				new int[]{R.id.messageTitle, R.id.messageDate, R.id.messageExtra},
+//				SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER); 
+//		
+//		ListView codesView = (ListView) findViewById(R.id.listCodes);
+//		codesView.setAdapter(codesAdapter);
+		
+		updateViews();
+		
+		// TODO: display spinner if not authenticated.
 	}
 
+
+	private void updateViews() {
+		TextView topTextView = (TextView) findViewById(R.id.mainTopText);
+		if (RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()) == SensibleRegistrationStatus.REGISTERED) {
+			topTextView.setText("Current games");
+			
+			TextView codesTextView = (TextView) findViewById(R.id.mainSecondText);
+			codesTextView.setText("Codes won");
+			
+			updateListViews();
+		} else {
+			topTextView.setText("Please wait.");
+		}
+	}
 
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
@@ -133,44 +161,49 @@ public class MainActivity extends Activity {
 		setStatus("");
 		
 		fetchList();
-		updateListView();
+		updateViews();
 	}
 
 
 	
-	private void updateListView() {
+	private void updateListViews() {
 		// Should probably use a SimpleCursorAdapter instead. But now it's working, and it's not going to be a performance issue.
 		
-		listMsg.clear();
-		CurrentGamesDatabaseHelper dbHelper = new CurrentGamesDatabaseHelper(getApplicationContext());
+		DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		
-		Cursor results = db.query(CurrentGamesDatabaseHelper.TABLE_NAME, 
-//				new String[]{CurrentGamesDatabaseHelper.GAME_ID, // Selected cols
-//					CurrentGamesDatabaseHelper.GAME_TYPE,
-//					CurrentGamesDatabaseHelper.GAME_STARTED, 
-//					CurrentGamesDatabaseHelper.GAME_PARTICIPANTS}, 
-				null, // select all cols - easier, and only an int that is possibly read too much
-				null, // Where clause - select all 
-				null, // Selection args 
-				null, // Group by
-				null, // Having
-				CurrentGamesDatabaseHelper.GAME_STARTED + " ASC"); // Order by started ascending
-		
-		
-		for (int i = 0; i<results.getCount(); i++) {
-			Game game = new Game(results); // also moves cursor to next
+
+		Cursor games = DatabaseHelper.getGames(db);
+
+		listMsg.clear();
+		for (int i = 0; i<games.getCount(); i++) {
+			Game game = new Game(games); // also moves cursor to next
 			
 			listMsg.add(i, new MessageItem(
 					game.gameTypeToDescriptiveString(true), 
 					game.started, 
 					"Participants: "+game.participants,
-					game));
+					game,
+					R.drawable.game));
 			
 		}
+		
 
+		Cursor codes = DatabaseHelper.getCodes(db);
+		
+		listCodes.clear();
+		for (int i = 0; i<codes.getCount(); i++) {
+			codes.moveToNext();
+			
+			listCodes.add(i, new MessageItem(
+					codes.getString(codes.getColumnIndex(DatabaseHelper.CODES_CODE)), 
+					codes.getInt(codes.getColumnIndex(DatabaseHelper.CODES_TIMESTAMP)), 
+					""));
+			
+		}
+		
 		dbHelper.close();
 		listAdapter.notifyDataSetChanged();
+		listCodesAdapter.notifyDataSetChanged();
 	}
 
 	private void setStatus(String status) {
@@ -219,10 +252,21 @@ public class MainActivity extends Activity {
 		String date;
 		String body;
 		Game game;
-		
+		int image = R.drawable.money;
+
 		public MessageItem(String title, long timestamp, String body, Game game) {
 			this(title, timestamp, body);
 			this.game = game;
+		}
+		
+		public MessageItem(String title, long timestamp, String body, Game game, int image) {
+			this(title, timestamp, body, game);
+			this.image = image;
+		}
+		
+		public MessageItem(String title, long timestamp, String body, int image) {
+			this(title, timestamp, body);
+			this.image = image;
 		}
 		
 		public MessageItem(String title, long timestamp, String body) {
@@ -254,24 +298,27 @@ public class MainActivity extends Activity {
 			LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 			final View viewMsg = inflater.inflate(R.layout.messageitem_layout, parent, false);
 			
-//			For when they will receive questions as well
-//			final ImageView viewImage = (ImageView) viewMsg.findViewById(R.id.imgCollapse);
-//			viewImage.setImageResource(R.drawable.applications_games);
+			MessageItem messageItem = values.get(position);
+			
+//			Set image
+			final ImageView viewImage = (ImageView) viewMsg.findViewById(R.id.imgCollapse);
+			viewImage.setImageResource(messageItem.image);
 			
 			final TextView tvDate = (TextView) viewMsg.findViewById(R.id.messageDate);
-			tvDate.setText(values.get(position).date);
+			tvDate.setText(messageItem.date);
 			
 			final TextView tvBody = (TextView) viewMsg.findViewById(R.id.messageExtra);
-			tvBody.setText(values.get(position).body);
+			tvBody.setText(messageItem.body);
 			
 			final TextView tvTitle = (TextView) viewMsg.findViewById(R.id.messageTitle);
-			tvTitle.setText(values.get(position).title);
+			tvTitle.setText(messageItem.title);
 			
 			return viewMsg;
 		}
 	}
 	
 	private class DownloadListTask extends AsyncTask<Void, Integer, String> {
+		
         @Override
         protected String doInBackground(Void... v) {
         	Log.d(TAG, "Registration status: "+ RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()));
@@ -321,11 +368,12 @@ public class MainActivity extends Activity {
 //        	((ProgressBar) findViewById(R.id.mainProgressBar)).setVisibility(View.INVISIBLE);
         	try {
 				JSONObject o = new JSONObject(result);
-				JSONArray current = o.getJSONArray("current");
 				
-				CurrentGamesDatabaseHelper dbHelper = new CurrentGamesDatabaseHelper(getApplicationContext());
+				DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
 				SQLiteDatabase db = dbHelper.getWritableDatabase();
 				
+
+				JSONArray current = o.getJSONArray("current");
 				// Current ids - for removing non-current games.
 				int[] ids = new int[current.length()];
 				
@@ -334,23 +382,35 @@ public class MainActivity extends Activity {
 					
 					ids[i] = entry.getInt("id");
 					
-					Game game = CurrentGamesDatabaseHelper.getGame(db, entry.getInt("id"));
+					Game game = DatabaseHelper.getGame(db, entry.getInt("id"));
 					
 					// Update some values if game exists (the "INSERT ... ON DUPLICATE KEY UPDATE" in sqlite is not flexible)
 					if (game == null) {
-						CurrentGamesDatabaseHelper.insertGame(db, entry.getInt("id"), entry.getString("type"), entry.getInt("started"), 0, entry.getInt("participants"));
+						DatabaseHelper.insertGame(db, entry.getInt("id"), entry.getString("type"), entry.getInt("started"), 0, entry.getInt("participants"));
 					} else {					
-						CurrentGamesDatabaseHelper.updateGame(db, entry.getInt("id"), entry.getString("type"), entry.getInt("started"), game.opened, entry.getInt("participants"));
+						DatabaseHelper.updateGame(db, entry.getInt("id"), entry.getString("type"), entry.getInt("started"), game.opened, entry.getInt("participants"));
 					}
 				}
 				
-				CurrentGamesDatabaseHelper.removeGamesNotIn(db, ids);
+				DatabaseHelper.removeGamesNotIn(db, ids);
 				
 				lastUpdate = System.currentTimeMillis();
 				
+				JSONArray codeArray = o.getJSONArray("codes");
+				
+				String[] codes = new String[codeArray.length()];
+				
+				for (int i = 0; i<codeArray.length(); i++) {
+					JSONObject entry = codeArray.getJSONObject(i);
+					codes[i] = entry.getString("code");
+					DatabaseHelper.insertCode(db, codes[i], entry.getInt("timestamp"));
+				}
+
+				DatabaseHelper.removeCodesNotIn(db, codes);
+				
 				dbHelper.close();
 				
-				updateListView();
+				updateViews();
 			} catch (JSONException e) {
 				e.printStackTrace();
 				setStatus("Error: "+result);

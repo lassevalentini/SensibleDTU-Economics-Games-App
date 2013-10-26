@@ -3,6 +3,7 @@ package dk.dtu.sensible.economicsgames;
 import java.io.Serializable;
 
 import android.database.Cursor;
+import android.os.Bundle;
 
 public class Game extends Message {
 	/**
@@ -28,11 +29,15 @@ public class Game extends Message {
 	public Game(Cursor cursor) {
 		super();
 		cursor.moveToNext();
-		this.id =           cursor.getInt(   cursor.getColumnIndex(CurrentGamesDatabaseHelper.GAME_ID));
-		this.type = typeFromString(cursor.getString(cursor.getColumnIndex(CurrentGamesDatabaseHelper.GAME_TYPE)));
-		this.started =      cursor.getInt(   cursor.getColumnIndex(CurrentGamesDatabaseHelper.GAME_STARTED));
-		this.opened =       cursor.getInt(   cursor.getColumnIndex(CurrentGamesDatabaseHelper.GAME_OPENED));
-		this.participants = cursor.getInt(   cursor.getColumnIndex(CurrentGamesDatabaseHelper.GAME_PARTICIPANTS));
+		this.id =           cursor.getInt(   cursor.getColumnIndex(DatabaseHelper.GAME_ID));
+		this.type = typeFromString(cursor.getString(cursor.getColumnIndex(DatabaseHelper.GAME_TYPE)));
+		this.started =      cursor.getInt(   cursor.getColumnIndex(DatabaseHelper.GAME_STARTED));
+		this.opened =       cursor.getInt(   cursor.getColumnIndex(DatabaseHelper.GAME_OPENED));
+		this.participants = cursor.getInt(   cursor.getColumnIndex(DatabaseHelper.GAME_PARTICIPANTS));
+	}
+	
+	public Game(Bundle bundle) {
+		this(bundle.getInt("game-id"), bundle.getString("game-type"), bundle.getInt("game-started"), 0, bundle.getInt("game-participants"));
 	}
 	
 

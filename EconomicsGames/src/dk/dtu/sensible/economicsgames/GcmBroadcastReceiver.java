@@ -14,6 +14,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -22,6 +23,7 @@ import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import dk.dtu.sensible.economicsgames.R;
+import dk.dtu.sensible.economicsgames.util.SerializationUtils;
 
 /**
  * Handling of GCM messages.
@@ -48,16 +50,24 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
 //        	notifyIntent.putExtras(extras);
 //        	LocalBroadcastManager.getInstance(context).sendBroadcast(notifyIntent);
         	
-        	// TODO: Add game to db, get GameActivity working with this
-        	// TODO: Change classes based on the extras in the gcm message?
         	// TODO: add "code won" notification and layout
         	String msgType = intent.getExtras().getString("type");
             Log.d(TAG, "msg-type: " + msgType);
-        	if (msgType.equalsIgnoreCase("economics-pgg-init")) {
-        		sendNotification(extras.getString("title"), extras.getString("body"), GameActivity.class);
+            
+        	if (msgType.equalsIgnoreCase("economics-game-init")) {
+        		Intent notificationIntent = new Intent(ctx, GameActivity.class);
+        		Game game = new Game(extras);
+        		notificationIntent.putExtra("game", SerializationUtils.serialize(game));
+        		DatabaseHelper dbHelper = new DatabaseHelper(ctx);
+        		SQLiteDatabase db = dbHelper.getWritableDatabase();
+        		DatabaseHelper.insertGame(db, game);
+        		dbHelper.close();
+        		
+        		sendNotification(extras.getString("title"), extras.getString("body"), notificationIntent);
         		
         	} else if (msgType.equalsIgnoreCase("auth")) {
-	            sendNotification(extras.getString("title"), "", AuthActivity.class);
+        		Intent notificationIntent = new Intent(ctx, AuthActivity.class);
+	            sendNotification(extras.getString("title"), "", notificationIntent);
 	            
         	}
         	
@@ -70,12 +80,11 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
     }
 
     // Put the GCM message into a notification and post it.
-    private void sendNotification(String title, String msg, Class activity) {
+    private void sendNotification(String title, String msg, Intent intent) {
         mNotificationManager = (NotificationManager)
                 ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         
-        PendingIntent contentIntent = PendingIntent.getActivity(ctx, 0,
-                new Intent(ctx, activity), 0);
+        PendingIntent contentIntent = PendingIntent.getActivity(ctx, 0, intent, 0);
 
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(ctx)

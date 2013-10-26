@@ -37,8 +37,11 @@ public class Message implements Serializable {
 		return null;
 	}
 	
-
 	public String typeToString() {
+		return typeToString(type);
+	}
+
+	public static String typeToString(Type type) {
 		switch (type) {
 		case pgg:
 			return "game-pgg";
