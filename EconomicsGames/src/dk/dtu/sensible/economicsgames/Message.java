@@ -43,12 +43,12 @@ public class Message implements Serializable {
 
 	public static String typeToString(Type type) {
 		switch (type) {
-		case pgg:
-			return "game-pgg";
-		case dg_proposer:
-			return "game-dg-proposer";
-		case dg_responder:
-			return "game-dg-responder";
+			case pgg:
+				return "game-pgg";
+			case dg_proposer:
+				return "game-dg-proposer";
+			case dg_responder:
+				return "game-dg-responder";
 		}
 		return "";
 	}

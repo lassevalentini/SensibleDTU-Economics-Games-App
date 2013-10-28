@@ -1,7 +1,5 @@
 package dk.dtu.sensible.economicsgames;
 
-import java.io.Serializable;
-
 import android.database.Cursor;
 import android.os.Bundle;
 
@@ -11,13 +9,13 @@ public class Game extends Message {
 	 */
 	private static final long serialVersionUID = -3880123716585106387L;
 	
-	public int id;
+	public String id;
 	public int started;
 	public int opened;
 	public int participants;
 	
 	
-	public Game(int id, String type, int started, int opened, int participants) {
+	public Game(String id, String type, int started, int opened, int participants) {
 		super();
 		this.id = id;
 		this.type = typeFromString(type);
@@ -29,7 +27,7 @@ public class Game extends Message {
 	public Game(Cursor cursor) {
 		super();
 		cursor.moveToNext();
-		this.id =           cursor.getInt(   cursor.getColumnIndex(DatabaseHelper.GAME_ID));
+		this.id =           cursor.getString(cursor.getColumnIndex(DatabaseHelper.GAME_ID));
 		this.type = typeFromString(cursor.getString(cursor.getColumnIndex(DatabaseHelper.GAME_TYPE)));
 		this.started =      cursor.getInt(   cursor.getColumnIndex(DatabaseHelper.GAME_STARTED));
 		this.opened =       cursor.getInt(   cursor.getColumnIndex(DatabaseHelper.GAME_OPENED));
@@ -37,7 +35,7 @@ public class Game extends Message {
 	}
 	
 	public Game(Bundle bundle) {
-		this(bundle.getInt("game-id"), bundle.getString("game-type"), bundle.getInt("game-started"), 0, bundle.getInt("game-participants"));
+		this(bundle.getString("game-id"), bundle.getString("game-type"), bundle.getInt("game-started"), 0, bundle.getInt("game-participants"));
 	}
 	
 

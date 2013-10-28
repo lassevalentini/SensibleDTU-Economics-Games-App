@@ -157,7 +157,7 @@ public class GameActivity extends Activity {
         	
         	Map<String, String> dataMap = new HashMap<String, String>();
     		dataMap.put("bearer_token", RegistrationHandler.getSensibleToken(getApplicationContext()));
-    		dataMap.put("id", id);
+    		dataMap.put("_id", id);
     		dataMap.put("answer", answer);
         	
         	if (token != null && token.length() > 0) {

@@ -375,20 +375,20 @@ public class MainActivity extends Activity {
 
 				JSONArray current = o.getJSONArray("current");
 				// Current ids - for removing non-current games.
-				int[] ids = new int[current.length()];
+				String[] ids = new String[current.length()];
 				
 				for (int i = 0; i<current.length(); i++) {
 					JSONObject entry = current.getJSONObject(i);
 					
-					ids[i] = entry.getInt("id");
+					ids[i] = entry.getString("id");
 					
-					Game game = DatabaseHelper.getGame(db, entry.getInt("id"));
+					Game game = DatabaseHelper.getGame(db, entry.getString("id"));
 					
 					// Update some values if game exists (the "INSERT ... ON DUPLICATE KEY UPDATE" in sqlite is not flexible)
 					if (game == null) {
-						DatabaseHelper.insertGame(db, entry.getInt("id"), entry.getString("type"), entry.getInt("started"), 0, entry.getInt("participants"));
+						DatabaseHelper.insertGame(db, entry.getString("id"), entry.getString("type"), entry.getInt("started"), 0, entry.getInt("participants"));
 					} else {					
-						DatabaseHelper.updateGame(db, entry.getInt("id"), entry.getString("type"), entry.getInt("started"), game.opened, entry.getInt("participants"));
+						DatabaseHelper.updateGame(db, entry.getString("id"), entry.getString("type"), entry.getInt("started"), game.opened, entry.getInt("participants"));
 					}
 				}
 				

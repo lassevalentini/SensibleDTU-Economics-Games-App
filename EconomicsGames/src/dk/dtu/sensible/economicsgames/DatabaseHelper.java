@@ -19,7 +19,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     private static final String GAMES_TABLE_CREATE =
                 "CREATE TABLE " + GAMES_TABLE_NAME + " (" +
-                    	GAME_ID + " INTEGER PRIMARY KEY, " +
+                    	GAME_ID + " TEXT PRIMARY KEY, " +
                     	GAME_TYPE + " TEXT, " +
                     	GAME_PARTICIPANTS + " INTEGER, " +
                     	GAME_STARTED + " INTEGER, " +
@@ -35,6 +35,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "CREATE TABLE " + CODES_TABLE_NAME + " (" +
                 		CODES_CODE + " TEXT PRIMARY KEY,"+
                 		CODES_TIMESTAMP + " INTEGER);";
+    
+    // TODO: Let this class handle the db - make all the methods non-static (or make non-static versions)
     
 	DatabaseHelper(Context context) {
         super(context, SharedConstants.DATABASE_NAME, null, DATABASE_VERSION);
@@ -94,7 +96,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.endTransaction();
 	}
 
-	public static Game getGame(SQLiteDatabase db, int id) {
+	public static Game getGame(SQLiteDatabase db, String id) {
 		
 		Cursor cursor = db.query(GAMES_TABLE_NAME, null, "id=\""+id+"\"", null, null, null, null);
 		
@@ -123,17 +125,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 
-	public static void removeGame(SQLiteDatabase db, int id) {
+	public static void removeGame(SQLiteDatabase db, String id) {
 		db.beginTransaction();
 		db.delete(GAMES_TABLE_NAME, "id="+id, null);
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
 	
-	public static void removeGamesNotIn(SQLiteDatabase db, int[] ids) {
+	public static void removeGamesNotIn(SQLiteDatabase db, String[] ids) {
 		String idString = new String();
 		
-		for (int id : ids) {
+		for (String id : ids) {
 			if (idString.length() > 0) {
 				idString += ",";
 			}
@@ -150,11 +152,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		insertGame(db, game.id, game.typeToString(), game.started, game.opened, game.participants);
 	}
 	
-	public static void insertGame(SQLiteDatabase db, int id, Type type, int started, int opened, int participants) {
+	public static void insertGame(SQLiteDatabase db, String id, Type type, int started, int opened, int participants) {
 		insertGame(db, id, Game.typeToString(type), started, opened, participants);
 	}
 	
-	public static void insertGame(SQLiteDatabase db, int id, String type, int started, int opened, int participants) {
+	public static void insertGame(SQLiteDatabase db, String id, String type, int started, int opened, int participants) {
 		db.beginTransaction();
 		//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
 		db.insertWithOnConflict(GAMES_TABLE_NAME, 
@@ -165,11 +167,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.endTransaction();
 	}
 	
-	public static void updateGame(SQLiteDatabase db, int id, Type type, int started, int opened, int participants) {
+	public static void updateGame(SQLiteDatabase db, String id, Type type, int started, int opened, int participants) {
 		updateGame(db, id, Game.typeToString(type), started, opened, participants);
 	}
 	
-	public static void updateGame(SQLiteDatabase db, int id, String type, int started, int opened, int participants) {
+	public static void updateGame(SQLiteDatabase db, String id, String type, int started, int opened, int participants) {
 		db.beginTransaction();
 		//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
 		db.update(GAMES_TABLE_NAME, 
@@ -181,7 +183,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 
 
-	public static ContentValues getGameValues(int id, String type, int started, int opened, int participants) {
+	public static ContentValues getGameValues(String id, String type, int started, int opened, int participants) {
 		ContentValues values = new ContentValues();
 		values.put(GAME_ID, id);
 		values.put(GAME_TYPE, type);
