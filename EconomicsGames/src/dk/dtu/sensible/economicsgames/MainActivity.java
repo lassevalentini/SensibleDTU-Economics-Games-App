@@ -380,15 +380,15 @@ public class MainActivity extends Activity {
 				for (int i = 0; i<current.length(); i++) {
 					JSONObject entry = current.getJSONObject(i);
 					
-					ids[i] = entry.getString("id");
+					ids[i] = entry.getString("_id");
 					
-					Game game = DatabaseHelper.getGame(db, entry.getString("id"));
+					Game game = DatabaseHelper.getGame(db, entry.getString("_id"));
 					
 					// Update some values if game exists (the "INSERT ... ON DUPLICATE KEY UPDATE" in sqlite is not flexible)
 					if (game == null) {
-						DatabaseHelper.insertGame(db, entry.getString("id"), entry.getString("type"), entry.getInt("started"), 0, entry.getInt("participants"));
+						DatabaseHelper.insertGame(db, entry.getString("_id"), entry.getString("type"), entry.getInt("started"), 0, entry.getInt("participants"));
 					} else {					
-						DatabaseHelper.updateGame(db, entry.getString("id"), entry.getString("type"), entry.getInt("started"), game.opened, entry.getInt("participants"));
+						DatabaseHelper.updateGame(db, entry.getString("_id"), entry.getString("type"), entry.getInt("started"), game.opened, entry.getInt("participants"));
 					}
 				}
 				

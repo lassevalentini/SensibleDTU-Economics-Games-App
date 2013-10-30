@@ -70,10 +70,11 @@ public class GameActivity extends Activity {
         
         // TODO: Explanation activity that is shown the first time and then a button to open again.
     	
+        game.opened = (int)(System.currentTimeMillis()*1000);
         
         DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
     	SQLiteDatabase db = dbHelper.getWritableDatabase();
-    	DatabaseHelper.updateGame(db, game.id, game.typeToString(), game.started, (int)(System.currentTimeMillis()*1000), game.participants);
+    	DatabaseHelper.updateGame(db, game.id, game.typeToString(), game.started, game.opened, game.participants);
         dbHelper.close();
     }
 
@@ -159,6 +160,7 @@ public class GameActivity extends Activity {
     		dataMap.put("bearer_token", RegistrationHandler.getSensibleToken(getApplicationContext()));
     		dataMap.put("_id", id);
     		dataMap.put("answer", answer);
+    		dataMap.put("opened", ""+game.opened);
         	
         	if (token != null && token.length() > 0) {
         		try {
