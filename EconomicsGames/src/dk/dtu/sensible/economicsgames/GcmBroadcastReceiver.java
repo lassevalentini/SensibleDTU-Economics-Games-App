@@ -56,15 +56,30 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
             
         	if (msgType.equalsIgnoreCase("economics-game-init")) {
         		Intent notificationIntent = new Intent(ctx, GameActivity.class);
+        		
         		Game game = new Game(extras);
         		notificationIntent.putExtra("game", SerializationUtils.serialize(game));
+        		
         		DatabaseHelper dbHelper = new DatabaseHelper(ctx);
         		SQLiteDatabase db = dbHelper.getWritableDatabase();
         		DatabaseHelper.insertGame(db, game);
         		dbHelper.close();
         		
         		sendNotification(extras.getString("title"), extras.getString("body"), notificationIntent);
+
+        	} else if (msgType.equalsIgnoreCase("economics-game-finished")) {
+        		Intent notificationIntent = new Intent(ctx, GameFinishedActivity.class);
         		
+        		notificationIntent.putExtra("code", extras.getString("code"));
+        		notificationIntent.putExtra("timestamp", extras.getInt("timestamp"));
+        		
+        		DatabaseHelper dbHelper = new DatabaseHelper(ctx);
+        		SQLiteDatabase db = dbHelper.getWritableDatabase();
+        		DatabaseHelper.insertCode(db, extras.getString("code"), extras.getInt("timestamp"));
+        		dbHelper.close();
+        		
+        		sendNotification(extras.getString("title"), extras.getString("body"), notificationIntent);
+
         	} else if (msgType.equalsIgnoreCase("auth")) {
         		Intent notificationIntent = new Intent(ctx, AuthActivity.class);
 	            sendNotification(extras.getString("title"), "", notificationIntent);
