@@ -127,7 +127,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	public static void removeGame(SQLiteDatabase db, String id) {
 		db.beginTransaction();
-		db.delete(GAMES_TABLE_NAME, "id="+id, null);
+		db.delete(GAMES_TABLE_NAME, "id=\""+id+"\"", null);
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
@@ -137,13 +137,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		
 		for (String id : ids) {
 			if (idString.length() > 0) {
-				idString += ",";
+				idString += "\",\"";
 			}
 			idString += id;
 		}
 		
 		db.beginTransaction();
-		db.delete(GAMES_TABLE_NAME, GAME_ID+" NOT IN ("+idString+")", null);
+		db.delete(GAMES_TABLE_NAME, GAME_ID+" NOT IN (\""+idString+"\")", null);
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
@@ -176,7 +176,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
 		db.update(GAMES_TABLE_NAME, 
 				getGameValues(id, type, started, opened, participants), 
-				"id="+id,
+				"id=\""+id+"\"",
 				null);
 		db.setTransactionSuccessful();
 		db.endTransaction();
