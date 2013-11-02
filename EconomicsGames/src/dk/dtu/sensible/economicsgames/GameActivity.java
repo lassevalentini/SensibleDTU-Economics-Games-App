@@ -46,8 +46,8 @@ public class GameActivity extends Activity {
         Log.d(TAG, "extras: "+extras.keySet());
         
         switch(game.type) {
-        	case pgg:
-	        	setContentView(R.layout.pgg_layout);
+        	case pdg:
+	        	setContentView(R.layout.pdg_layout);
 	        	TextView text = (TextView)findViewById(R.id.fullscreen_content);
 	        	text.setText(String.format(getResources().getString(R.string.pgg_description), extras.getInt("participants")));
 	            bindKeepButton();

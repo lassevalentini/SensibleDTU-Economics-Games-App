@@ -15,16 +15,16 @@ public class Message implements Serializable {
 	public Type type;
 	
 	public static enum Type {
-		pgg,
+		pdg,
 		dg_responder,
 		dg_proposer
 	}
 	
 	public static Type typeFromString(String type) {
 		Log.d(TAG, type);
-		if (type.equalsIgnoreCase("game-pgg")) {
-			Log.d(TAG, "pgg");
-			return Type.pgg;
+		if (type.equalsIgnoreCase("game-pdg")) {
+			Log.d(TAG, "pdg");
+			return Type.pdg;
 			
 		} else if (type.equalsIgnoreCase("game-dg-proposer")) {
 			Log.d(TAG, "dg-prop");
@@ -43,8 +43,8 @@ public class Message implements Serializable {
 
 	public static String typeToString(Type type) {
 		switch (type) {
-			case pgg:
-				return "game-pgg";
+			case pdg:
+				return "game-pdg";
 			case dg_proposer:
 				return "game-dg-proposer";
 			case dg_responder:
