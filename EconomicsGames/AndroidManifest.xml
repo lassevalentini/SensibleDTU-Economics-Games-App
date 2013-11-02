@@ -3,65 +3,67 @@
     package="dk.dtu.sensible.economicsgames"
     android:versionCode="1"
     android:versionName="1.0" >
-	
+
     <uses-sdk
         android:minSdkVersion="15"
         android:targetSdkVersion="18" />
-    
-    
-    <!-- All probes -->
-<!--     <uses-permission android:name="android.permission.WAKE_LOCK"/> -->
 
-	<!-- Ability to check connectivity before loading urls -->
+    <!-- All probes -->
+    <!-- <uses-permission android:name="android.permission.WAKE_LOCK"/> -->
+
+
+    <!-- Ability to check connectivity before loading urls -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    
+
     <!-- DatabaseService, Archive service (unique ids) -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    
+
     <!-- gcm permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-    
-	<permission android:name="dk.dtu.sensible.economicsgames.gcm.permission.C2D_MESSAGE" 
-	    android:protectionLevel="signature" />
+
+    <permission
+        android:name="dk.dtu.sensible.economicsgames.gcm.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+
     <uses-permission android:name="dk.dtu.sensible.economicsgames.gcm.permission.C2D_MESSAGE" />
-  
-        
-        
+
     <application
         android:allowBackup="true"
-        android:label="@string/app_name" 
-        android:largeHeap="true" 
         android:icon="@drawable/green_logo5"
+        android:label="@string/app_name"
+        android:largeHeap="true"
         android:theme="@style/AppTheme" >
-        
-        <service android:name=".MainPipeline"></service>
-<!--         <service android:name="edu.mit.media.funf.storage.NameValueDatabaseService"></service> -->
-<!--         <service android:name="edu.mit.media.funf.storage.HttpUploadService"></service> -->
-        <service android:name=".RegistrationHandler"/>
+        <service android:name="dk.dtu.sensible.economicsgames.MainPipeline" >
+        </service>
+        <!-- <service android:name="edu.mit.media.funf.storage.NameValueDatabaseService"></service> -->
+        <!-- <service android:name="edu.mit.media.funf.storage.HttpUploadService"></service> -->
+        <service android:name="dk.dtu.sensible.economicsgames.RegistrationHandler" />
 
-        <receiver android:name=".LauncherReceiver" android:enabled="true">
-<!--         	<intent-filter> -->
-<!--         		<action android:name="android.intent.action.BATTERY_CHANGED" /> -->
-<!--         		<action android:name="android.intent.action.BOOT_COMPLETED" /> -->
-<!--         		<action android:name="android.intent.action.DOCK_EVENT" /> -->
-<!--         		<action android:name="android.intent.action.ACTION_SCREEN_ON" /> -->
-<!--         		<action android:name="android.intent.action.USER_PRESENT" /> -->
-<!--         	</intent-filter> -->
+        <receiver
+            android:name="dk.dtu.sensible.economicsgames.LauncherReceiver"
+            android:enabled="true" >
+
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.BATTERY_CHANGED" /> -->
+            <!-- <action android:name="android.intent.action.BOOT_COMPLETED" /> -->
+            <!-- <action android:name="android.intent.action.DOCK_EVENT" /> -->
+            <!-- <action android:name="android.intent.action.ACTION_SCREEN_ON" /> -->
+            <!-- <action android:name="android.intent.action.USER_PRESENT" /> -->
+            <!-- </intent-filter> -->
         </receiver>
         <receiver
-            android:name=".GcmBroadcastReceiver"
+            android:name="dk.dtu.sensible.economicsgames.GcmBroadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >
-
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-                <category android:name="dk.dtu.imm.datacollector"/>
+
+                <category android:name="dk.dtu.imm.datacollector" />
             </intent-filter>
         </receiver>
-        
-        
+
         <activity
             android:name="dk.dtu.sensible.economicsgames.GameActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -73,15 +75,25 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        
-        <activity android:name=".MainActivity" android:theme="@style/AppTheme" android:label="@string/app_name" android:screenOrientation="portrait">
+        <activity
+            android:name="dk.dtu.sensible.economicsgames.MainActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".AuthActivity" android:theme="@style/AppTheme" android:screenOrientation="portrait"/>
-    
+        <activity
+            android:name="dk.dtu.sensible.economicsgames.AuthActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme" />
+        <activity
+            android:name="dk.dtu.sensible.economicsgames.GameFinishedActivity"
+            android:label="@string/title_activity_game_finished" >
+        </activity>
     </application>
 
 </manifest>
