@@ -16,4 +16,7 @@ public final class SharedConstants {
     
     
     public static final String CONNECTOR_URL = DOMAIN_URL + "sensible-dtu/connectors/connector_economics/";
+    
+    // TODO: better name
+    public static final String STUDY_NAME = "Sensible economics games";
 }

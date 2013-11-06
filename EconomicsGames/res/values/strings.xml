@@ -3,10 +3,15 @@
 
     <string name="app_name">Economics Games</string>
     <string name="dg_description">This is a simple game for two players. Player one, the proposer, gets to decide how to split the movie codes between the two. The role of Player two is to receive the decided amount.</string>
-    <string name="pgg_description">You are given a code for a movie. You can now decide what to do with it.
-        \n\nIf you choose "Keep", you get to keep the code.
-        \nIf you choose "Share", you forfeit the code, but two codes will be randomly distributed between all players.
-        \n\nYou are playing with %1$s others.</string>
+    <string name="pdg_description">You are now matched to another individual at random. You are both seeing the same set of instructions.
+\n\nYou will now each make one decision — you will not know the other person’s choice when you are making your decision.
+\n\nYour identity and the identity of the other person will never be revealed to anyone, thus this game is completely anonymous. 
+\n\nEach of you has been given a free movie voucher.
+\n\nEach of you has two choices: you can choose to KEEP the voucher or PASS it.
+\n\nIf you PASS the voucher, you will give up the voucher but the other person will receiver 2 EXTRA VOUCHERS.
+\n\nThus, if you both choose to PASS your vouchers, you will each end up with 2 vouchers.
+\n\nHowever, if the one person PASSES and the other KEEPs the one who PASSED will end up with no vouchers and the one who kept will end up with 3 vouchers.
+\n\nIf neither of you PASSES you will both end up with 1 voucher.</string>
     <string name="share_button">Share</string>
     <string name="keep_button">Keep</string>
     <string name="split_button">Split evenly</string>

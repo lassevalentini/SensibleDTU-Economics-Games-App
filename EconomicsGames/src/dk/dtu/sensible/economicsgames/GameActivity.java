@@ -49,7 +49,7 @@ public class GameActivity extends Activity {
         	case pdg:
 	        	setContentView(R.layout.pdg_layout);
 	        	TextView text = (TextView)findViewById(R.id.fullscreen_content);
-	        	text.setText(String.format(getResources().getString(R.string.pgg_description), extras.getInt("participants")));
+	        	text.setText(String.format(getResources().getString(R.string.pdg_description), extras.getInt("participants")));
 	            bindKeepButton();
 	            bindShareButton();
 	            break;

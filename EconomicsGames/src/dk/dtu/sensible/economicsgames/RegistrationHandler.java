@@ -81,7 +81,7 @@ public class RegistrationHandler extends Service {
     private static final String PROPERTY_SENSIBLE_REFRESH_TOKEN = "sensible_refresh_token";
     private static final String PROPERTY_SENSIBLE_TOKEN_TIMEOUT = "sensible_token_timeout";
     public static final String PROPERTY_SENSIBLE_CODE = "sensible_code";
-    private static final int NOTIFICATION_ID = 1234;
+    private static final int NOTIFICATION_ID = 156315435;
     public static final long DAY = 24 * 60 * 60 * 1000;
 
     /**
@@ -182,7 +182,7 @@ public class RegistrationHandler extends Service {
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     sendNotification("Register your phone!",
-                            "Touch to register your phone with SensibleDTU experiment");
+                            "Touch to register your phone with the "+SharedConstants.STUDY_NAME+" experiment");
                 }
             };
             registerReceiver(br, new IntentFilter(SHOW_REGISTRATION_REMINDER) );
@@ -191,7 +191,7 @@ public class RegistrationHandler extends Service {
             am = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
         }
         sendNotification("Register your phone!",
-                "Touch to register your phone with SensibleDTU experiment");
+                "Touch to register your phone with the "+SharedConstants.STUDY_NAME+" experiment");
         am.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis(),
                 AlarmManager.INTERVAL_FIFTEEN_MINUTES, pi);
     }
@@ -205,7 +205,7 @@ public class RegistrationHandler extends Service {
 
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context)
-                        .setSmallIcon(R.drawable.red_logo5)
+                        .setSmallIcon(R.drawable.green_logo5)
                         .setContentTitle(title)
                         .setStyle(new NotificationCompat.BigTextStyle()
                                 .bigText(msg))

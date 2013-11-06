@@ -22,6 +22,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+
 import dk.dtu.sensible.economicsgames.R;
 import dk.dtu.sensible.economicsgames.RegistrationHandler.SensibleRegistrationStatus;
 import dk.dtu.sensible.economicsgames.util.SerializationUtils;
@@ -63,7 +66,9 @@ public class MainActivity extends Activity {
 	private MessagesAdapter listCodesAdapter;
 	
 	private long lastUpdate = 0;
-		
+
+    private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    
 	@Override
 	protected void onStart() {
 		super.onStart();
@@ -78,6 +83,8 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_layout);
+		
+		checkPlayServices();
 		
 		trustAllHosts(); // During devel - disables ssl warnings etc.
 		
@@ -164,10 +171,29 @@ public class MainActivity extends Activity {
 		updateViews();
 	}
 
-
+	/**
+	 * Check the device to make sure it has the Google Play Services APK. If
+	 * it doesn't, display a dialog that allows users to download the APK from
+	 * the Google Play Store or enable it in the device's system settings.
+	 */
+	private boolean checkPlayServices() {
+	    int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+	    if (resultCode != ConnectionResult.SUCCESS) {
+	        if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+	            GooglePlayServicesUtil.getErrorDialog(resultCode, this,
+	                    PLAY_SERVICES_RESOLUTION_REQUEST).show();
+	        } else {
+	            Log.i(TAG, "This device is not supported.");
+	            finish();
+	        }
+	        return false;
+	    }
+	    return true;
+	}
 	
 	private void updateListViews() {
 		// Should probably use a SimpleCursorAdapter instead. But now it's working, and it's not going to be a performance issue.
+		// TODO: keep a list of recently answered id's so that we can filter them (might happen because of the eventual consistency in db)
 		
 		DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -223,8 +249,9 @@ public class MainActivity extends Activity {
 	
 	private void fetchList() {
 		
-		
-		if (lastUpdate < (System.currentTimeMillis() - 5*60*1000)) {// 5 min
+		if (!RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()).equals(
+				SensibleRegistrationStatus.NOT_REGISTERED_NO_CODE) && // Dont fetch when the app is started the first time.
+				lastUpdate < (System.currentTimeMillis() - 5*60*1000)) {// 5 min
 			ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 	        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 	        if (networkInfo != null && networkInfo.isConnected()) {

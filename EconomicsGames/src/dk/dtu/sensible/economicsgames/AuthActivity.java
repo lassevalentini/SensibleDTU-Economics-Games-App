@@ -1,6 +1,7 @@
 package dk.dtu.sensible.economicsgames;
 
 import dk.dtu.sensible.economicsgames.R;
+import dk.dtu.sensible.economicsgames.RegistrationHandler.SensibleRegistrationStatus;
 import android.app.Activity;
 import android.content.*;
 import android.net.http.SslError;
@@ -39,7 +40,8 @@ public class AuthActivity extends Activity {
 
     private static final String CODE_URL_PREFIX = "sensible-dtu/authorization_manager/connector_economics/auth/granted/";
 
-    public void onCreate(Bundle savedInstanceState) {
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         this.requestWindowFeature(Window.FEATURE_PROGRESS);
@@ -55,6 +57,16 @@ public class AuthActivity extends Activity {
         registerWithServer(context, regId);
     }
 
+	@Override
+	protected void onResume() {
+		if (RegistrationHandler.getSensibleRegistrationStatus(context).equals(SensibleRegistrationStatus.REGISTERED)) {
+			if (getParent() == null) {
+				Intent mainIntent = new Intent(context, MainActivity.class);
+				startActivity(mainIntent);
+			}
+			finish();
+		}
+	}
 
 
     private void uisetup() {
@@ -88,7 +100,7 @@ public class AuthActivity extends Activity {
                 view.loadUrl(url);
                 return false; // then it is not handled by default action
             }
-
+            
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
@@ -130,7 +142,7 @@ public class AuthActivity extends Activity {
                         } */
 
                     }
-                    Log.d(TAG, "URL: " + url);
+                    Log.d(TAG, "URL loaded: " + url);
                 }
             }
         });
