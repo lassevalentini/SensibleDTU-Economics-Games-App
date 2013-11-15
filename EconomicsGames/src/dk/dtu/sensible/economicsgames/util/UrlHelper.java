@@ -6,8 +6,16 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Map;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.message.BasicNameValuePair;
@@ -20,6 +28,8 @@ public class UrlHelper {
 	private static final String TAG = "UrlHelper";
 
 	public static String post(String url, Map<String,String> data) throws IOException {
+		trustAllHosts(); // During devel - trusts the certificates
+		
 		Log.d(TAG, "POSTing to "+url);
 		
 		InputStream is = null;
@@ -42,6 +52,10 @@ public class UrlHelper {
 	        form.writeTo(os);
 	        os.close();
 	        
+
+	        int response = conn.getResponseCode();
+	        Log.d(TAG, "Response: "+response);
+	        
 	        is = conn.getInputStream();
 
 	        String result = readInput(is);
@@ -63,6 +77,8 @@ public class UrlHelper {
 	
 
 	public static String get(String url) throws IOException {
+		trustAllHosts(); // During devel - trusts the certificates
+		
 		Log.d(TAG, "GETing "+url);
 		
 		InputStream is = null;
@@ -110,7 +126,7 @@ public class UrlHelper {
 		URL url = new URL(myurl);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setReadTimeout(10000 /* milliseconds */);
-        conn.setConnectTimeout(15000 /* milliseconds */);
+        conn.setConnectTimeout(20000 /* milliseconds */);
         return conn;
 	}
 
@@ -123,4 +139,42 @@ public class UrlHelper {
         
         return new UrlEncodedFormEntity(nameValuePairs, "utf-8");
 	}
+	
+
+
+    private static void trustAllHosts() {
+    	HostnameVerifier hostnameVerifier = new HostnameVerifier() {
+        	public boolean verify(String hostname, javax.net.ssl.SSLSession session) {
+        		return true;
+        	};
+        };
+        HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
+        
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+				@Override	
+                public X509Certificate[] getAcceptedIssuers() {
+                        return new java.security.cert.X509Certificate[] {};
+                }
+
+				@Override
+                public void checkClientTrusted(X509Certificate[] chain,
+                                String authType) throws CertificateException {
+                }
+
+				@Override
+                public void checkServerTrusted(X509Certificate[] chain,
+                                String authType) throws CertificateException {
+                }
+        } };
+
+        // Install the all-trusting trust manager
+        try {
+                SSLContext sc = SSLContext.getInstance("TLS");
+                sc.init(null, trustAllCerts, new java.security.SecureRandom());
+                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        } catch (Exception e) {
+                e.printStackTrace();
+        }
+    }
 }

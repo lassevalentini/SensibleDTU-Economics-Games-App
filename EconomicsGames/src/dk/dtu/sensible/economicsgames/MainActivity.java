@@ -85,8 +85,8 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.main_layout);
 		
 		checkPlayServices();
-		
-		trustAllHosts(); // During devel - disables ssl warnings etc.
+
+		//TODO: Make the two listviews into one listview with sectioned headers instead
 		
 		ListView gamesView = (ListView) findViewById(R.id.listMessages);
 		listMsg = new ArrayList<MessageItem>();
@@ -446,40 +446,4 @@ public class MainActivity extends Activity {
     }
 	
 	
-
-    private static void trustAllHosts() {
-    	HostnameVerifier hostnameVerifier = new HostnameVerifier() {
-        	public boolean verify(String hostname, javax.net.ssl.SSLSession session) {
-        		return true;
-        	};
-        };
-        HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
-        
-        // Create a trust manager that does not validate certificate chains
-        TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-				@Override	
-                public X509Certificate[] getAcceptedIssuers() {
-                        return new java.security.cert.X509Certificate[] {};
-                }
-
-				@Override
-                public void checkClientTrusted(X509Certificate[] chain,
-                                String authType) throws CertificateException {
-                }
-
-				@Override
-                public void checkServerTrusted(X509Certificate[] chain,
-                                String authType) throws CertificateException {
-                }
-        } };
-
-        // Install the all-trusting trust manager
-        try {
-                SSLContext sc = SSLContext.getInstance("TLS");
-                sc.init(null, trustAllCerts, new java.security.SecureRandom());
-                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-        } catch (Exception e) {
-                e.printStackTrace();
-        }
-    }
 }
