@@ -59,11 +59,11 @@ public class MainActivity extends Activity {
 	private static boolean serviceRunning = false;
 	
 
-	private List<MessageItem> listMsg;
+	private List<ListItem> listMsg;
 	private MessagesAdapter listAdapter;
 	
-	private List<MessageItem> listCodes;
-	private MessagesAdapter listCodesAdapter;
+//	private List<MessageItem> listCodes;
+//	private MessagesAdapter listCodesAdapter;
 	
 	private long lastUpdate = 0;
 
@@ -89,27 +89,39 @@ public class MainActivity extends Activity {
 		//TODO: Make the two listviews into one listview with sectioned headers instead
 		
 		ListView gamesView = (ListView) findViewById(R.id.listMessages);
-		listMsg = new ArrayList<MessageItem>();
+		listMsg = new ArrayList<ListItem>();
 		listAdapter = new MessagesAdapter(this, listMsg);
 		gamesView.setAdapter(listAdapter);
 		
 		gamesView.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
-				Log.d(TAG, "pressed pos: "+pos+" type: "+listMsg.get(pos).game.type);
-				Intent dialogIntent = new Intent(getBaseContext(), GameActivity.class);
-		        dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		        
-		        dialogIntent.putExtra("game", SerializationUtils.serialize(listMsg.get(pos).game));
-		        
-		        getApplication().startActivity(dialogIntent);
+				ListItem listItem = listMsg.get(pos);
+				Log.d(TAG, "pressed pos: "+pos+" type: "+listItem);
+				if (listItem instanceof GameItem) {
+					GameItem gameItem = (GameItem) listItem;
+					Intent dialogIntent = new Intent(getBaseContext(), GameActivity.class);
+			        dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			        
+			        dialogIntent.putExtra("game", SerializationUtils.serialize(gameItem.game));
+			        
+			        getApplication().startActivity(dialogIntent);
+				} else if (listItem instanceof CodeItem) {
+					CodeItem codeItem = (CodeItem) listItem;
+					Intent dialogIntent = new Intent(getBaseContext(), GameFinishedActivity.class);
+			        dialogIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			        
+			        dialogIntent.putExtra("code", codeItem.code);
+			        
+			        getApplication().startActivity(dialogIntent);
+				}
 			}
 		});
-		
-		ListView codesView = (ListView) findViewById(R.id.listCodes);
-		listCodes = new ArrayList<MessageItem>();
-		listCodesAdapter = new MessagesAdapter(this, listCodes);
-		codesView.setAdapter(listCodesAdapter);
+//		
+//		ListView codesView = (ListView) findViewById(R.id.listCodes);
+//		listCodes = new ArrayList<MessageItem>();
+//		listCodesAdapter = new MessagesAdapter(this, listCodes);
+//		codesView.setAdapter(listCodesAdapter);
 		
 //		
 //		CurrentGamesDatabaseHelper dbHelper = new CurrentGamesDatabaseHelper(getApplicationContext());
@@ -136,9 +148,9 @@ public class MainActivity extends Activity {
 		TextView topTextView = (TextView) findViewById(R.id.mainTopText);
 		if (RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()) == SensibleRegistrationStatus.REGISTERED) {
 			topTextView.setText("Current games");
-			
-			TextView codesTextView = (TextView) findViewById(R.id.mainSecondText);
-			codesTextView.setText("Codes won");
+//			
+//			TextView codesTextView = (TextView) findViewById(R.id.mainSecondText);
+//			codesTextView.setText("Codes won");
 			
 			updateListViews();
 		} else {
@@ -204,7 +216,7 @@ public class MainActivity extends Activity {
 		for (int i = 0; i<games.getCount(); i++) {
 			Game game = new Game(games); // also moves cursor to next
 			
-			listMsg.add(i, new MessageItem(
+			listMsg.add(new GameItem(
 					game.gameTypeToDescriptiveString(true), 
 					game.started, 
 					"Participants: "+game.participants,
@@ -213,23 +225,23 @@ public class MainActivity extends Activity {
 			
 		}
 		
+		listMsg.add(new SectionHeaderItem("Codes"));
 
 		Cursor codes = DatabaseHelper.getCodes(db);
 		
-		listCodes.clear();
+//		listCodes.clear();
 		for (int i = 0; i<codes.getCount(); i++) {
 			codes.moveToNext();
 			
-			listCodes.add(i, new MessageItem(
+			listMsg.add(new CodeItem(
 					codes.getString(codes.getColumnIndex(DatabaseHelper.CODES_CODE)), 
-					codes.getInt(codes.getColumnIndex(DatabaseHelper.CODES_TIMESTAMP)), 
-					""));
+					codes.getInt(codes.getColumnIndex(DatabaseHelper.CODES_TIMESTAMP))));
 			
 		}
 		
 		dbHelper.close();
 		listAdapter.notifyDataSetChanged();
-		listCodesAdapter.notifyDataSetChanged();
+//		listCodesAdapter.notifyDataSetChanged();
 	}
 
 	private void setStatus(String status) {
@@ -271,25 +283,23 @@ public class MainActivity extends Activity {
 			Log.d(TAG, "Not starting the service again");
 		}
 	}
-
-
-	class MessageItem {
+	
+	abstract class ListItem {}
+	
+	class SectionHeaderItem extends ListItem {
+		String title;
+		public SectionHeaderItem(String title) {
+			this.title = title;
+		}
+		
+	}
+	
+	class MessageItem extends ListItem {
 
 		String title;
 		String date;
 		String body;
-		Game game;
 		int image = R.drawable.money;
-
-		public MessageItem(String title, long timestamp, String body, Game game) {
-			this(title, timestamp, body);
-			this.game = game;
-		}
-		
-		public MessageItem(String title, long timestamp, String body, Game game, int image) {
-			this(title, timestamp, body, game);
-			this.image = image;
-		}
 		
 		public MessageItem(String title, long timestamp, String body, int image) {
 			this(title, timestamp, body);
@@ -303,17 +313,40 @@ public class MainActivity extends Activity {
 			java.text.DateFormat dateFormat = DateFormat.getDateTimeInstance();
 			this.date = dateFormat.format(cal.getTime());
 			this.body = body;
-			
-//			Log.d(TAG, timestamp + " => "+date);
 		}
 		
 	}
 
-	class MessagesAdapter extends ArrayAdapter<MessageItem> {
-		private final Context context;
-		private final List<MessageItem> values;
+	class GameItem extends MessageItem {
 
-		public MessagesAdapter(Context context, List<MessageItem> values) {
+		Game game;
+
+		public GameItem(String title, long timestamp, String body, Game game) {
+			super(title, timestamp, body);
+			this.game = game;
+		}
+		
+		public GameItem(String title, long timestamp, String body, Game game, int image) {
+			super(title, timestamp, body, image);
+			this.game = game;
+		}
+	}
+	class CodeItem extends MessageItem {
+
+		String code;
+
+		public CodeItem(String code, int timestamp) {
+			super(code, timestamp, "");
+			this.code = code;
+		}
+		
+	}
+
+	class MessagesAdapter extends ArrayAdapter<ListItem> {
+		private final Context context;
+		private final List<ListItem> values;
+
+		public MessagesAdapter(Context context, List<ListItem> values) {
 			super(context, R.layout.messageitem_layout, values);
 			this.context = context;
 			this.values = values;
@@ -323,23 +356,39 @@ public class MainActivity extends Activity {
 		@Override
 		public View getView(final int position, View convertView, ViewGroup parent) {
 			LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			final View viewMsg = inflater.inflate(R.layout.messageitem_layout, parent, false);
 			
-			MessageItem messageItem = values.get(position);
+			final View viewMsg;
 			
-//			Set image
-			final ImageView viewImage = (ImageView) viewMsg.findViewById(R.id.imgCollapse);
-			viewImage.setImageResource(messageItem.image);
+			ListItem listItem = values.get(position);
 			
-			final TextView tvDate = (TextView) viewMsg.findViewById(R.id.messageDate);
-			tvDate.setText(messageItem.date);
-			
-			final TextView tvBody = (TextView) viewMsg.findViewById(R.id.messageExtra);
-			tvBody.setText(messageItem.body);
-			
-			final TextView tvTitle = (TextView) viewMsg.findViewById(R.id.messageTitle);
-			tvTitle.setText(messageItem.title);
-			
+			if (listItem instanceof MessageItem) {
+				MessageItem messageItem = (MessageItem) listItem;
+				
+				viewMsg = inflater.inflate(R.layout.messageitem_layout, parent, false);
+				
+	//			Set image
+				final ImageView viewImage = (ImageView) viewMsg.findViewById(R.id.imgCollapse);
+				viewImage.setImageResource(messageItem.image);
+				
+				final TextView tvDate = (TextView) viewMsg.findViewById(R.id.messageDate);
+				tvDate.setText(messageItem.date);
+				
+				final TextView tvBody = (TextView) viewMsg.findViewById(R.id.messageExtra);
+				tvBody.setText(messageItem.body);
+				
+				final TextView tvTitle = (TextView) viewMsg.findViewById(R.id.messageTitle);
+				tvTitle.setText(messageItem.title);
+			} else if (listItem instanceof SectionHeaderItem) {
+				SectionHeaderItem sectionItem = (SectionHeaderItem) listItem;
+				
+				viewMsg = inflater.inflate(R.layout.section_header, parent, false);
+				
+				final TextView title = (TextView) viewMsg.findViewById(R.id.sectionText);
+				title.setText(sectionItem.title);
+				
+			} else {
+				viewMsg = null;
+			}
 			return viewMsg;
 		}
 	}

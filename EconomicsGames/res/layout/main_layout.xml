@@ -29,21 +29,5 @@
         android:layout_weight="0.5" >
 	
     </ListView>
-    
-    <TextView
-        android:id="@+id/mainSecondText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text=""
-        android:textSize="30dp" />
-
-    <ListView
-        android:id="@+id/listCodes"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.5" >
-
-    </ListView>
 
 </LinearLayout>
