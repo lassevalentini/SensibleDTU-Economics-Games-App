@@ -85,9 +85,10 @@ public class GameActivity extends Activity {
     }
     
     private void answer(String answer) {
-    	(new PostResponseTask()).execute(""+game.id, answer);
+    	(new PostAnswerTask(getApplicationContext(), game.id, answer, game.opened)).execute();
     	DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
     	SQLiteDatabase db = dbHelper.getWritableDatabase();
+    	DatabaseHelper.insertAnswer(db, game.id, answer, game.opened);
     	DatabaseHelper.removeGame(db, game.id);
     	dbHelper.close();
 		finish();
@@ -149,36 +150,4 @@ public class GameActivity extends Activity {
 		});
     }
     
-    private class PostResponseTask extends AsyncTask<String, Integer, String> {
-        @Override
-        protected String doInBackground(String... args) {
-        	String id = args[0];
-        	String answer = args[1];
-        	String token = RegistrationHandler.getSensibleToken(getApplicationContext());
-        	
-        	Map<String, String> dataMap = new HashMap<String, String>();
-    		dataMap.put("bearer_token", RegistrationHandler.getSensibleToken(getApplicationContext()));
-    		dataMap.put("game_id", id);
-    		dataMap.put("answer", answer);
-    		dataMap.put("opened", ""+game.opened);
-        	
-        	if (token != null && token.length() > 0) {
-        		try {
-	                return UrlHelper.post(SharedConstants.CONNECTOR_URL+"answer/", dataMap);
-	            } catch (IOException e) {
-	            	Log.e(TAG, "Error posting "+dataMap+" to "+SharedConstants.CONNECTOR_URL+"answer/: "+e.getMessage());
-					e.printStackTrace();
-	                return "Unable to retrieve web page. URL may be invalid.";
-	            }
-        	} 
-        	Log.e(TAG, "Not authenticated yet. Tried posting "+dataMap+" to "+SharedConstants.CONNECTOR_URL+"answer/");
-        	return "Not authenticated yet"; 
-        }
-        
-
-        @Override
-        protected void onPostExecute(String result) {
-        	
-       }
-    }
 }

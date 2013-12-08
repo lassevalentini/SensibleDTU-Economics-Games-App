@@ -36,6 +36,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 		CODES_CODE + " TEXT PRIMARY KEY,"+
                 		CODES_TIMESTAMP + " INTEGER);";
     
+
+    public static final String ANSWERS_TABLE_NAME = "answers";
+    public static final String ANSWERS_GAME_ID = "id";
+    public static final String ANSWERS_ANSWER = "answer";
+    public static final String ANSWERS_OPENED = "opened";
+    
+    private static final String ANSWERS_TABLE_CREATE =
+                "CREATE TABLE " + ANSWERS_TABLE_NAME + " (" +
+                		ANSWERS_GAME_ID + " TEXT PRIMARY KEY,"+
+                		ANSWERS_ANSWER + " TEXT,"+
+                		ANSWERS_OPENED + " INTEGER);";
+    
     // TODO: Let this class handle the db - make all the methods non-static (or make non-static versions)
     
 	DatabaseHelper(Context context) {
@@ -47,12 +59,43 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(GAMES_TABLE_CREATE);
         db.execSQL(CODES_TABLE_CREATE);
+        db.execSQL(ANSWERS_TABLE_CREATE);
     }
 
     
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		
+	}
+	
+	public static void insertAnswer(SQLiteDatabase db, String id, String answer, int opened) {
+		db.beginTransaction();
+		//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
+		db.insertWithOnConflict(ANSWERS_TABLE_NAME, 
+				null, 
+				getAnswersValues(id, answer, opened), 
+				SQLiteDatabase.CONFLICT_IGNORE);
+		db.setTransactionSuccessful();
+		db.endTransaction();
+	}
+
+	public static Cursor getAnswers(SQLiteDatabase db) {
+		Cursor results = db.query(ANSWERS_TABLE_NAME, 
+				null, // select all cols
+				null, // Where clause - select all 
+				null, // Selection args 
+				null, // Group by
+				null, // Having
+				null); // Order by started ascending
+		
+		return results;
+	}
+
+	public static void removeAnswer(SQLiteDatabase db, String id) {
+		db.beginTransaction();
+		db.delete(ANSWERS_TABLE_NAME, ANSWERS_GAME_ID+"=\""+id+"\"", null);
+		db.setTransactionSuccessful();
+		db.endTransaction();
 	}
 	
 	
@@ -98,7 +141,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	public static Game getGame(SQLiteDatabase db, String id) {
 		
-		Cursor cursor = db.query(GAMES_TABLE_NAME, null, "id=\""+id+"\"", null, null, null, null);
+		Cursor cursor = db.query(GAMES_TABLE_NAME, null, GAME_ID+"=\""+id+"\"", null, null, null, null);
 		
 		if (cursor.getCount() < 1) {
 			return null;
@@ -127,7 +170,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	public static void removeGame(SQLiteDatabase db, String id) {
 		db.beginTransaction();
-		db.delete(GAMES_TABLE_NAME, "id=\""+id+"\"", null);
+		db.delete(GAMES_TABLE_NAME, GAME_ID+"=\""+id+"\"", null);
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
@@ -176,7 +219,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
 		db.update(GAMES_TABLE_NAME, 
 				getGameValues(id, type, started, opened, participants), 
-				"id=\""+id+"\"",
+				GAME_ID+"=\""+id+"\"",
 				null);
 		db.setTransactionSuccessful();
 		db.endTransaction();
@@ -198,6 +241,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		ContentValues values = new ContentValues();
 		values.put(CODES_CODE, code);
 		values.put(CODES_TIMESTAMP, timestamp);
+		return values;
+	}
+	
+	
+	public static ContentValues getAnswersValues(String id, String answer, int opened) {
+		ContentValues values = new ContentValues();
+		values.put(ANSWERS_GAME_ID, id);
+		values.put(ANSWERS_ANSWER, answer);
+		values.put(ANSWERS_OPENED, opened);
 		return values;
 	}
 }

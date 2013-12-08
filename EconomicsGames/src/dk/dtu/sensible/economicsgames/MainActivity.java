@@ -1,22 +1,13 @@
 package dk.dtu.sensible.economicsgames;
 
 import java.io.IOException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,8 +22,10 @@ import dk.dtu.sensible.economicsgames.util.SerializationUtils;
 import dk.dtu.sensible.economicsgames.util.UrlHelper;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -50,7 +43,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
@@ -66,6 +58,7 @@ public class MainActivity extends Activity {
 //	private MessagesAdapter listCodesAdapter;
 	
 	private long lastUpdate = 0;
+	private BroadcastReceiver br;
 
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     
@@ -117,28 +110,32 @@ public class MainActivity extends Activity {
 				}
 			}
 		});
-//		
-//		ListView codesView = (ListView) findViewById(R.id.listCodes);
-//		listCodes = new ArrayList<MessageItem>();
-//		listCodesAdapter = new MessagesAdapter(this, listCodes);
-//		codesView.setAdapter(listCodesAdapter);
 		
-//		
-//		CurrentGamesDatabaseHelper dbHelper = new CurrentGamesDatabaseHelper(getApplicationContext());
-//		SQLiteDatabase db = dbHelper.getReadableDatabase();
-//		Cursor cursor = CurrentGamesDatabaseHelper.getGames(db);
-//		dbHelper.close();
-//		SimpleCursorAdapter codesAdapter = new SimpleCursorAdapter(this, 
-//				R.layout.messageitem_layout, 
-//				cursor, 
-//				new String[]{CurrentGamesDatabaseHelper.GAME_TYPE, CurrentGamesDatabaseHelper.GAME_STARTED, CurrentGamesDatabaseHelper.GAME_PARTICIPANTS}, 
-//				new int[]{R.id.messageTitle, R.id.messageDate, R.id.messageExtra},
-//				SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER); 
-//		
-//		ListView codesView = (ListView) findViewById(R.id.listCodes);
-//		codesView.setAdapter(codesAdapter);
-		
+		// Get a new list when re-registration is done
+		br = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                fetchList();
+                
+            }
+        };
+        registerReceiver(br, new IntentFilter(RegistrationHandler.REGISTRATION_DONE_INTENT) );
+        
 		updateViews();
+		
+
+    	DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
+    	SQLiteDatabase db = dbHelper.getReadableDatabase();
+    	Cursor answers = DatabaseHelper.getAnswers(db);
+    	
+    	for (int i = 0; i < answers.getCount(); i++) {
+    		answers.moveToNext();
+    		String game_id = answers.getString(answers.getColumnIndex(DatabaseHelper.ANSWERS_GAME_ID));
+    		String answer = answers.getString(answers.getColumnIndex(DatabaseHelper.ANSWERS_ANSWER));
+    		int opened = answers.getInt(answers.getColumnIndex(DatabaseHelper.ANSWERS_OPENED));
+    		
+    		(new PostAnswerTask(getApplicationContext(), game_id, answer, opened)).execute();
+		}
 		
 		// TODO: display spinner if not authenticated.
 	}
@@ -147,7 +144,7 @@ public class MainActivity extends Activity {
 	private void updateViews() {
 		TextView topTextView = (TextView) findViewById(R.id.mainTopText);
 		if (RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()) == SensibleRegistrationStatus.REGISTERED) {
-			topTextView.setText("Current games");
+//			topTextView.setText("Current games");
 //			
 //			TextView codesTextView = (TextView) findViewById(R.id.mainSecondText);
 //			codesTextView.setText("Codes won");
@@ -206,30 +203,37 @@ public class MainActivity extends Activity {
 	private void updateListViews() {
 		// Should probably use a SimpleCursorAdapter instead. But now it's working, and it's not going to be a performance issue.
 		// TODO: keep a list of recently answered id's so that we can filter them (might happen because of the eventual consistency in db)
+
+		listMsg.clear();
 		
 		DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 
 		Cursor games = DatabaseHelper.getGames(db);
-
-		listMsg.clear();
+		
+		if (games.getCount() > 0) {
+			listMsg.add(new SectionHeaderItem("Current games"));
+		}
+		
 		for (int i = 0; i<games.getCount(); i++) {
 			Game game = new Game(games); // also moves cursor to next
 			
 			listMsg.add(new GameItem(
 					game.gameTypeToDescriptiveString(true), 
 					game.started, 
-					"Participants: "+game.participants,
+					"",
 					game,
 					R.drawable.game));
 			
 		}
 		
-		listMsg.add(new SectionHeaderItem("Codes"));
 
 		Cursor codes = DatabaseHelper.getCodes(db);
+
+		if (codes.getCount() > 0) {
+			listMsg.add(new SectionHeaderItem("Vouchers"));
+		}
 		
-//		listCodes.clear();
 		for (int i = 0; i<codes.getCount(); i++) {
 			codes.moveToNext();
 			
@@ -241,7 +245,6 @@ public class MainActivity extends Activity {
 		
 		dbHelper.close();
 		listAdapter.notifyDataSetChanged();
-//		listCodesAdapter.notifyDataSetChanged();
 	}
 
 	private void setStatus(String status) {
@@ -370,8 +373,8 @@ public class MainActivity extends Activity {
 				final ImageView viewImage = (ImageView) viewMsg.findViewById(R.id.imgCollapse);
 				viewImage.setImageResource(messageItem.image);
 				
-				final TextView tvDate = (TextView) viewMsg.findViewById(R.id.messageDate);
-				tvDate.setText(messageItem.date);
+				final TextView tvDescription = (TextView) viewMsg.findViewById(R.id.messageDescription);
+				tvDescription.setText(messageItem.date);
 				
 				final TextView tvBody = (TextView) viewMsg.findViewById(R.id.messageExtra);
 				tvBody.setText(messageItem.body);
@@ -386,6 +389,9 @@ public class MainActivity extends Activity {
 				final TextView title = (TextView) viewMsg.findViewById(R.id.sectionText);
 				title.setText(sectionItem.title);
 				
+				viewMsg.setFocusable(false);
+				viewMsg.setEnabled(false);
+				
 			} else {
 				viewMsg = null;
 			}
@@ -397,33 +403,15 @@ public class MainActivity extends Activity {
 		
         @Override
         protected String doInBackground(Void... v) {
-        	Log.d(TAG, "Registration status: "+ RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()));
-        	long startTime = System.currentTimeMillis();
         	
-        	try {
-				Thread.sleep(10);
-			} catch (InterruptedException e1) {}
-        	
-        	// Wait up to 30 seconds for the registration to complete
-        	while (!RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()).equals(SensibleRegistrationStatus.REGISTERED)
-        			&& System.currentTimeMillis() - startTime < 10*1000) {
-        		try {
-        			synchronized (RegistrationHandler.registrationLock) {
-        				RegistrationHandler.registrationLock.wait(500);
-					}
-				} catch (InterruptedException e) {}
-        	}
-        	Log.d(TAG, "Registration status after: "+ RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()));
+        	Log.d(TAG, "Downloadlist - Registration status: "+ RegistrationHandler.getSensibleRegistrationStatus(getApplicationContext()));
         	
         	String token = RegistrationHandler.getSensibleToken(getApplicationContext());
         	
         	Map<String, String> getMap = new HashMap<String, String>();
     		getMap.put("bearer_token", token);
     		
-        	if (token != null && token.length() > 0) {
-        		
-	//        	((ProgressBar) findViewById(R.id.mainProgressBar)).setVisibility(View.VISIBLE);
-	        	
+        	if (token != null && token.length() > 0) {	        	
 	            try {
 	                return UrlHelper.get(SharedConstants.CONNECTOR_URL+"list/", getMap);
 	            } catch (IOException e) {

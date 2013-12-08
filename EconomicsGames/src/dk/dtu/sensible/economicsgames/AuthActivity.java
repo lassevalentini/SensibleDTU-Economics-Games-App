@@ -59,6 +59,8 @@ public class AuthActivity extends Activity {
 
 	@Override
 	protected void onResume() {
+		super.onResume();
+			
 		if (RegistrationHandler.getSensibleRegistrationStatus(context).equals(SensibleRegistrationStatus.REGISTERED)) {
 			if (getParent() == null) {
 				Intent mainIntent = new Intent(context, MainActivity.class);

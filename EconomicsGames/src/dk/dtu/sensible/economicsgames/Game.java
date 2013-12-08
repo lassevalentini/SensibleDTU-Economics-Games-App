@@ -42,7 +42,7 @@ public class Game extends Message {
 	public String gameTypeToDescriptiveString(boolean capitalize) {
 		switch (type) {
 			case pdg:
-				return (capitalize ? "P" : "p")+"risoners dilemma game";
+				return (capitalize ? "P" : "p")+"risoners dilemma";
 				
 			case dg_proposer:
 				return (capitalize ? "D" : "D")+"ictator game";

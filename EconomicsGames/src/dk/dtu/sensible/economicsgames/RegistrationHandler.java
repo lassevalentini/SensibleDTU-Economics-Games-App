@@ -75,6 +75,7 @@ public class RegistrationHandler extends Service {
     private static final String PROPERTY_ON_SERVER_EXPIRATION_TIME = "onServerExpirationTimeMs";
 
     private static final String SHOW_REGISTRATION_REMINDER = "dk.dtu.imm.sensibleeconomics.show_registration_reminder";
+    public static final String REGISTRATION_DONE_INTENT = "dk.dtu.imm.sensibleeconomics.registration_done_intent";
 
     public static final String SHARED_PREFERENCES_NAME = "sensible_auth";
     public static final String PROPERTY_SENSIBLE_TOKEN = "sensible_token";
