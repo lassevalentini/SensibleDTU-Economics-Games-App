@@ -47,7 +47,7 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
-	private static final String TAG = "AUTH_MainActivity";
+	private static final String TAG = "MainActivity";
 	private static boolean serviceRunning = false;
 	
 
@@ -66,10 +66,9 @@ public class MainActivity extends Activity {
 	protected void onStart() {
 		super.onStart();
 		
-		fetchList();
-        
 		startService();
-
+		
+		fetchList();
 	}
 
 	@Override
@@ -209,7 +208,7 @@ public class MainActivity extends Activity {
 		DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-		Cursor games = DatabaseHelper.getGames(db);
+		Cursor games = DatabaseHelper.getUnsentGames(db);
 		
 		if (games.getCount() > 0) {
 			listMsg.add(new SectionHeaderItem("Current games"));

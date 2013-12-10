@@ -7,6 +7,7 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import dk.dtu.sensible.economicsgames.util.UrlException;
 import dk.dtu.sensible.economicsgames.util.UrlHelper;
 
 import android.content.Context;
@@ -31,6 +32,13 @@ public class PostAnswerTask extends AsyncTask<String, Integer, String> {
 		this.opened = opened;
 	}
 	
+	private void removeAnswer() {
+		DatabaseHelper dbHelper = new DatabaseHelper(context);
+    	SQLiteDatabase db = dbHelper.getWritableDatabase();
+    	DatabaseHelper.setGameAnswered(db, id);
+    	dbHelper.close();
+	}
+	
     @Override
     protected String doInBackground(String... args) {
     	
@@ -45,18 +53,20 @@ public class PostAnswerTask extends AsyncTask<String, Integer, String> {
     	if (token != null && token.length() > 0) {
     		try {
     			String response = UrlHelper.post(SharedConstants.CONNECTOR_URL+"answer/", dataMap);
-    			
-    			DatabaseHelper dbHelper = new DatabaseHelper(context);
-		    	SQLiteDatabase db = dbHelper.getWritableDatabase();
-		    	DatabaseHelper.removeAnswer(db, id);
-		    	dbHelper.close();
-		    	
+    			removeAnswer();
+		    	Log.i(TAG, "Response:"+response);
             	return response;
             } catch (IOException e) {
             	Log.e(TAG, "Error posting "+dataMap+" to "+SharedConstants.CONNECTOR_URL+"answer/: "+e.getMessage());
 				e.printStackTrace();
                 return "Unable to retrieve web page. URL may be invalid.";
-            }
+            } catch (UrlException e) {
+            	Log.e(TAG, "Error posting "+dataMap+" to "+SharedConstants.CONNECTOR_URL+"answer/: "+e.getMessage());
+            	if (e.getCode() >= 400 && e.getCode() < 500) {
+            		removeAnswer();
+            	}
+            	return e.getMessage();
+			}
     	} 
     	Log.e(TAG, "Not authenticated yet. Tried posting "+dataMap+" to "+SharedConstants.CONNECTOR_URL+"answer/");
     	return "Not authenticated yet"; 

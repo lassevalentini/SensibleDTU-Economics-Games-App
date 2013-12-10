@@ -27,7 +27,7 @@ public class UrlHelper {
 
 	private static final String TAG = "UrlHelper";
 
-	public static String post(String url, Map<String,String> data) throws IOException {
+	public static String post(String url, Map<String,String> data) throws IOException, UrlException {
 		trustAllHosts(); // During devel - trusts the certificates
 		
 		Log.d(TAG, "POSTing to "+url);
@@ -55,6 +55,10 @@ public class UrlHelper {
 
 	        int response = conn.getResponseCode();
 	        Log.d(TAG, "Response: "+response);
+	        
+	        if (response != 200) {
+	        	throw new UrlException(response);
+	        }
 	        
 	        is = conn.getInputStream();
 

@@ -16,6 +16,7 @@ import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import dk.dtu.sensible.economicsgames.R;
+import dk.dtu.sensible.economicsgames.util.UrlException;
 import dk.dtu.sensible.economicsgames.util.UrlHelper;
 
 //import org.apache.http.HttpResponse;
@@ -420,7 +421,9 @@ public class RegistrationHandler extends Service {
                     e.printStackTrace();  
                 } catch (IOException e) {
                     e.printStackTrace();  
-                } finally {
+                } catch (UrlException e) {
+					e.printStackTrace();
+				} finally {
                 	synchronized (registrationLock) {
                 		registrationLock.notifyAll();
 					}

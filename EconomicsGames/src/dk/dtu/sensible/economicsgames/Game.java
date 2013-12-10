@@ -35,20 +35,27 @@ public class Game extends Message {
 	}
 	
 	public Game(Bundle bundle) {
-		this(bundle.getString("game-id"), bundle.getString("game-type"), bundle.getInt("game-started"), 0, bundle.getInt("game-participants"));
+		this(bundle.getString("data.game-id"), 
+				bundle.getString("data.game-type"), 
+				Integer.parseInt(bundle.getString("data.game-started")), 
+				0, 
+				Integer.parseInt(bundle.getString("data.game-participants")));
 	}
 	
 
 	public String gameTypeToDescriptiveString(boolean capitalize) {
 		switch (type) {
 			case pdg:
-				return (capitalize ? "P" : "p")+"risoners dilemma";
+				return (capitalize ? "G" : "g")+"ame";
+//				return (capitalize ? "P" : "p")+"risoners dilemma";
 				
 			case dg_proposer:
-				return (capitalize ? "D" : "D")+"ictator game";
+				return (capitalize ? "G" : "g")+"ame";
+//				return (capitalize ? "D" : "D")+"ictator game";
 				
 			case dg_responder:
-				return (capitalize ? "D" : "D")+"ictator game";
+				return (capitalize ? "G" : "g")+"ame";
+//				return (capitalize ? "D" : "D")+"ictator game";
 		}
 		return "unknown game";
 	}

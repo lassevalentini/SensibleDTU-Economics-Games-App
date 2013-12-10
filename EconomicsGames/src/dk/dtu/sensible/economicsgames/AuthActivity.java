@@ -151,7 +151,7 @@ public class AuthActivity extends Activity {
         wv.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onProgressChanged(WebView view, int progress) {
-                Log.d(TAG, "progress: " + progress);
+//                Log.d(TAG, "progress: " + progress);
                 activity.setProgress(progress * 100);
             }
         });

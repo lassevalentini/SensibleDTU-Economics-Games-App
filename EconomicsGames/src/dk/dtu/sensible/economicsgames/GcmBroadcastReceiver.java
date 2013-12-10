@@ -29,7 +29,7 @@ import dk.dtu.sensible.economicsgames.util.SerializationUtils;
  * Handling of GCM messages.
  */
 public class GcmBroadcastReceiver extends BroadcastReceiver {
-    static final String TAG = "AUTH_AuthActivity_broadcastReceiver";
+    static final String TAG = "GcmBroadcastReceiver";
     public static final String EVENT_MSG_RECEIVED = "EVENT_MSG_RECEIVED";
     
     public static final int NOTIFICATION_ID = 1;
@@ -39,7 +39,7 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
     
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(TAG, "Received: " + intent.getExtras().toString());
+        Log.d(TAG, "Received: " + intent.getExtras().keySet().toString());
         GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
         ctx = context;
         Bundle extras = intent.getExtras();
@@ -50,8 +50,7 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
 //        	notifyIntent.putExtras(extras);
 //        	LocalBroadcastManager.getInstance(context).sendBroadcast(notifyIntent);
         	
-        	// TODO: add "code won" notification and layout
-        	String msgType = intent.getExtras().getString("type");
+        	String msgType = extras.getString("data.type");
             Log.d(TAG, "msg-type: " + msgType);
             
         	if (msgType.equalsIgnoreCase("economics-game-init")) {
@@ -65,24 +64,26 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
         		DatabaseHelper.insertGame(db, game);
         		dbHelper.close();
         		
-        		sendNotification(extras.getString("title"), extras.getString("body"), notificationIntent);
+        		sendNotification(extras.getString("data.title"), extras.getString("data.body"), notificationIntent);
 
         	} else if (msgType.equalsIgnoreCase("economics-game-finished")) {
         		Intent notificationIntent = new Intent(ctx, GameFinishedActivity.class);
         		
-        		notificationIntent.putExtra("code", extras.getString("code"));
-        		notificationIntent.putExtra("timestamp", extras.getInt("timestamp"));
+        		int timestamp = Integer.parseInt(extras.getString("data.timestamp"));
+        		
+        		notificationIntent.putExtra("code", extras.getString("data.code"));
+        		notificationIntent.putExtra("timestamp", timestamp);
         		
         		DatabaseHelper dbHelper = new DatabaseHelper(ctx);
         		SQLiteDatabase db = dbHelper.getWritableDatabase();
-        		DatabaseHelper.insertCode(db, extras.getString("code"), extras.getInt("timestamp"));
+        		DatabaseHelper.insertCode(db, extras.getString("data.code"), timestamp);
         		dbHelper.close();
         		
-        		sendNotification(extras.getString("title"), extras.getString("body"), notificationIntent);
+        		sendNotification(extras.getString("data.title"), extras.getString("data.body"), notificationIntent);
 
         	} else if (msgType.equalsIgnoreCase("auth")) {
         		Intent notificationIntent = new Intent(ctx, AuthActivity.class);
-	            sendNotification(extras.getString("title"), "", notificationIntent);
+	            sendNotification(extras.getString("data.title"), "", notificationIntent);
 	            
         	}
         	

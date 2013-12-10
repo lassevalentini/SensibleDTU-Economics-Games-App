@@ -21,17 +21,17 @@ public class Message implements Serializable {
 	}
 	
 	public static Type typeFromString(String type) {
-		Log.d(TAG, type);
+//		Log.d(TAG, type);
 		if (type.equalsIgnoreCase("game-pdg")) {
-			Log.d(TAG, "pdg");
+//			Log.d(TAG, "pdg");
 			return Type.pdg;
 			
 		} else if (type.equalsIgnoreCase("game-dg-proposer")) {
-			Log.d(TAG, "dg-prop");
+//			Log.d(TAG, "dg-prop");
 			return Type.dg_proposer;
 			
 		} else if (type.equalsIgnoreCase("game-dg-responder")) {
-			Log.d(TAG, "dg-resp");
+//			Log.d(TAG, "dg-resp");
 			return Type.dg_responder;
 		}
 		return null;

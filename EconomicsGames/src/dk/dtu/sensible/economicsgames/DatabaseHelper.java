@@ -6,24 +6,27 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 3;
     public static final String GAMES_TABLE_NAME = "current_games";
     public static final String GAME_ID = "id";
     public static final String GAME_TYPE = "type";
     public static final String GAME_PARTICIPANTS = "participants";
     public static final String GAME_STARTED = "started";
     public static final String GAME_OPENED = "opened";
+    public static final String GAME_ANSWERED = "answered";
     
     private static final String GAMES_TABLE_CREATE =
                 "CREATE TABLE " + GAMES_TABLE_NAME + " (" +
-                    	GAME_ID + " TEXT PRIMARY KEY, " +
+                    	GAME_ID + " TEXT PRIMARY KEY NOT NULL, " +
                     	GAME_TYPE + " TEXT, " +
                     	GAME_PARTICIPANTS + " INTEGER, " +
                     	GAME_STARTED + " INTEGER, " +
-                    	GAME_OPENED + " INTEGER);";
+                    	GAME_OPENED + " INTEGER, "+
+                		GAME_ANSWERED +" INTEGER)";
     
     
 
@@ -33,8 +36,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     private static final String CODES_TABLE_CREATE =
                 "CREATE TABLE " + CODES_TABLE_NAME + " (" +
-                		CODES_CODE + " TEXT PRIMARY KEY,"+
-                		CODES_TIMESTAMP + " INTEGER);";
+                		CODES_CODE + " TEXT PRIMARY KEY NOT NULL,"+
+                		CODES_TIMESTAMP + " INTEGER)";
     
 
     public static final String ANSWERS_TABLE_NAME = "answers";
@@ -44,9 +47,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     private static final String ANSWERS_TABLE_CREATE =
                 "CREATE TABLE " + ANSWERS_TABLE_NAME + " (" +
-                		ANSWERS_GAME_ID + " TEXT PRIMARY KEY,"+
+                		ANSWERS_GAME_ID + " TEXT PRIMARY KEY NOT NULL,"+
                 		ANSWERS_ANSWER + " TEXT,"+
                 		ANSWERS_OPENED + " INTEGER);";
+    
+    private static final String[] TABLES = new String[]{GAMES_TABLE_NAME, CODES_TABLE_NAME, ANSWERS_TABLE_NAME};
+	private static final String TAG = "DatabaseHelper";
     
     // TODO: Let this class handle the db - make all the methods non-static (or make non-static versions)
     
@@ -61,11 +67,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CODES_TABLE_CREATE);
         db.execSQL(ANSWERS_TABLE_CREATE);
     }
-
+    
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    	this.onUpgrade(db, oldVersion, newVersion);
+    }
     
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		
+		Log.d(TAG, "onUpgrade("+oldVersion+", "+newVersion+")");
+		for (int i = 0; i < TABLES.length; i++) {
+			db.execSQL("DROP TABLE IF EXISTS "+TABLES[i]);
+		}
+		this.onCreate(db);
 	}
 	
 	public static void insertAnswer(SQLiteDatabase db, String id, String answer, int opened) {
@@ -89,6 +103,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				null); // Order by started ascending
 		
 		return results;
+	}
+
+	public static void setGameAnswered(SQLiteDatabase db, String id) {
+
+		ContentValues values = new ContentValues();
+		values.put(GAME_ANSWERED, 1);
+		
+		db.beginTransaction();
+		db.update(GAMES_TABLE_NAME, values, GAME_ID+"=\""+id+"\"", null);
+		db.setTransactionSuccessful();
+		db.endTransaction();
 	}
 
 	public static void removeAnswer(SQLiteDatabase db, String id) {
@@ -148,9 +173,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		}
 		return new Game(cursor);
 	}
-	
 
 	public static Cursor getGames(SQLiteDatabase db) {
+		return getGames(db, null);
+	}
+
+	public static Cursor getUnsentGames(SQLiteDatabase db) {
+		return getGames(db, GAME_ANSWERED+"=0");
+	}
+	
+	public static Cursor getSentGames(SQLiteDatabase db) {
+		return getGames(db, GAME_ANSWERED+"=1");
+	}
+	
+	public static Cursor getGames(SQLiteDatabase db, String where) {
+				
+//		Cursor results = db.rawQuery("SELECT ", selectionArgs)
 		
 		Cursor results = db.query(GAMES_TABLE_NAME, 
 //				new String[]{CurrentGamesDatabaseHelper.GAME_ID, // Selected cols
@@ -158,7 +196,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 //					CurrentGamesDatabaseHelper.GAME_STARTED, 
 //					CurrentGamesDatabaseHelper.GAME_PARTICIPANTS}, 
 				null, // select all cols - easier, and only an int that is possibly read too much
-				null, // Where clause - select all 
+				where, // Where clause - select all 
 				null, // Selection args 
 				null, // Group by
 				null, // Having
@@ -233,6 +271,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		values.put(GAME_STARTED, started);
 		values.put(GAME_OPENED, opened);
 		values.put(GAME_PARTICIPANTS, participants);
+		values.put(GAME_ANSWERED, 0);
 		return values;
 	}
 
