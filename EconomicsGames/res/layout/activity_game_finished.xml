@@ -43,8 +43,8 @@
 	        android:layout_height="wrap_content"
 	        android:layout_alignLeft="@+id/codeDescription"
 	        android:layout_below="@+id/space"
-	        android:ems="10"
-	        android:enabled="false" >
+	        android:ems="10" 
+	        android:selectAllOnFocus="true">
 	
 	        <requestFocus />
 	    </EditText>

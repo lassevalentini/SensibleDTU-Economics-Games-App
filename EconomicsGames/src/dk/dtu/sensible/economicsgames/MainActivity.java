@@ -77,8 +77,6 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.main_layout);
 		
 		checkPlayServices();
-
-		//TODO: Make the two listviews into one listview with sectioned headers instead
 		
 		ListView gamesView = (ListView) findViewById(R.id.listMessages);
 		listMsg = new ArrayList<ListItem>();
@@ -201,8 +199,7 @@ public class MainActivity extends Activity {
 	
 	private void updateListViews() {
 		// Should probably use a SimpleCursorAdapter instead. But now it's working, and it's not going to be a performance issue.
-		// TODO: keep a list of recently answered id's so that we can filter them (might happen because of the eventual consistency in db)
-
+		
 		listMsg.clear();
 		
 		DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
