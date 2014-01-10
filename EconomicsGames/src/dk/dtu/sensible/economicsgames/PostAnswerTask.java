@@ -35,7 +35,15 @@ public class PostAnswerTask extends AsyncTask<String, Integer, String> {
 	private void removeAnswer() {
 		DatabaseHelper dbHelper = new DatabaseHelper(context);
     	SQLiteDatabase db = dbHelper.getWritableDatabase();
-    	DatabaseHelper.setGameAnswered(db, id);
+    	DatabaseHelper.removeAnswer(db, id);
+    	dbHelper.close();
+	}
+	
+	private void answerFailed() {		
+		DatabaseHelper dbHelper = new DatabaseHelper(context);
+    	SQLiteDatabase db = dbHelper.getWritableDatabase();
+    	DatabaseHelper.removeAnswer(db, id);
+    	DatabaseHelper.setGameUnAnswered(db, id);
     	dbHelper.close();
 	}
 	
@@ -57,13 +65,16 @@ public class PostAnswerTask extends AsyncTask<String, Integer, String> {
 		    	Log.i(TAG, "Response:"+response);
             	return response;
             } catch (IOException e) {
+            	answerFailed();
             	Log.e(TAG, "Error posting "+dataMap+" to "+SharedConstants.CONNECTOR_URL+"answer/: "+e.getMessage());
 				e.printStackTrace();
-                return "Unable to retrieve web page. URL may be invalid.";
+                return "Unable to retrieve web page.";
             } catch (UrlException e) {
             	Log.e(TAG, "Error posting "+dataMap+" to "+SharedConstants.CONNECTOR_URL+"answer/: "+e.getMessage());
             	if (e.getCode() >= 400 && e.getCode() < 500) {
             		removeAnswer();
+            	} else {
+            		answerFailed();
             	}
             	return e.getMessage();
 			}

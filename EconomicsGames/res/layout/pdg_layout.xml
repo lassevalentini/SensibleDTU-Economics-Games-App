@@ -38,12 +38,12 @@
         android:orientation="horizontal" >
 
         <Button
-            android:id="@+id/shareButton"
+            android:id="@+id/giveButton"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/share_button" />
+            android:text="@string/pass_button" />
 
         <Button
             android:id="@+id/keepButton"

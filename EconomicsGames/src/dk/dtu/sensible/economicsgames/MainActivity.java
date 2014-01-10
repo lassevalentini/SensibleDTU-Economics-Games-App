@@ -209,6 +209,8 @@ public class MainActivity extends Activity {
 		
 		if (games.getCount() > 0) {
 			listMsg.add(new SectionHeaderItem("Current games"));
+		} else {
+			listMsg.add(new SectionHeaderItem("No games yet"));
 		}
 		
 		for (int i = 0; i<games.getCount(); i++) {
@@ -448,7 +450,7 @@ public class MainActivity extends Activity {
 					if (game == null) {
 						DatabaseHelper.insertGame(db, entry.getString("_id"), entry.getString("type"), entry.getInt("started"), 0, entry.getInt("participants"));
 					} else {					
-						DatabaseHelper.updateGame(db, entry.getString("_id"), entry.getString("type"), entry.getInt("started"), game.opened, entry.getInt("participants"));
+						DatabaseHelper.updateGame(db, entry.getString("_id"), entry.getString("type"), entry.getInt("started"), game.opened, entry.getInt("participants"), game.answered);
 					}
 				}
 				

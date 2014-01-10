@@ -116,6 +116,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.endTransaction();
 	}
 
+	public static void setGameUnAnswered(SQLiteDatabase db, String id) {
+
+		ContentValues values = new ContentValues();
+		values.put(GAME_ANSWERED, 0);
+		
+		db.beginTransaction();
+		db.update(GAMES_TABLE_NAME, values, GAME_ID+"=\""+id+"\"", null);
+		db.setTransactionSuccessful();
+		db.endTransaction();
+	}
+
 	public static void removeAnswer(SQLiteDatabase db, String id) {
 		db.beginTransaction();
 		db.delete(ANSWERS_TABLE_NAME, ANSWERS_GAME_ID+"=\""+id+"\"", null);
@@ -224,7 +235,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		}
 		
 		db.beginTransaction();
-		db.delete(GAMES_TABLE_NAME, GAME_ID+" NOT IN (\""+idString+"\")", null);
+		db.delete(GAMES_TABLE_NAME, GAME_ID+" NOT IN (\""+idString+"\") AND "+GAME_ANSWERED+"=0", null);
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
@@ -242,7 +253,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
 		db.insertWithOnConflict(GAMES_TABLE_NAME, 
 				null, 
-				getGameValues(id, type, started, opened, participants), 
+				getGameValues(id, type, started, opened, participants, 0), 
 				SQLiteDatabase.CONFLICT_IGNORE);
 		db.setTransactionSuccessful();
 		db.endTransaction();
@@ -251,30 +262,37 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public static void updateGame(SQLiteDatabase db, String id, Type type, int started, int opened, int participants) {
 		updateGame(db, id, Game.typeToString(type), started, opened, participants);
 	}
-	
+
 	public static void updateGame(SQLiteDatabase db, String id, String type, int started, int opened, int participants) {
+		updateGame(db, id, type, started, opened, participants, 0);
+	}
+
+	public static void updateGame(SQLiteDatabase db, String id, String type, int started, int opened, int participants, int answered) {
 		db.beginTransaction();
 		//SQLiteDatabase.CONFLICT_IGNORE means ignore if already there
 		db.update(GAMES_TABLE_NAME, 
-				getGameValues(id, type, started, opened, participants), 
+				getGameValues(id, type, started, opened, participants, answered), 
 				GAME_ID+"=\""+id+"\"",
 				null);
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
 
-
 	public static ContentValues getGameValues(String id, String type, int started, int opened, int participants) {
+		return getGameValues(id, type, started, opened, participants, 0);
+	}
+	
+	public static ContentValues getGameValues(String id, String type, int started, int opened, int participants, int answered) {
 		ContentValues values = new ContentValues();
 		values.put(GAME_ID, id);
 		values.put(GAME_TYPE, type);
 		values.put(GAME_STARTED, started);
 		values.put(GAME_OPENED, opened);
 		values.put(GAME_PARTICIPANTS, participants);
-		values.put(GAME_ANSWERED, 0);
+		values.put(GAME_ANSWERED, answered);
 		return values;
 	}
-
+	
 	
 	public static ContentValues getCodeValues(String code, int timestamp) {
 		ContentValues values = new ContentValues();

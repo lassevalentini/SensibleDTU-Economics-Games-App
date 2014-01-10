@@ -51,7 +51,7 @@ public class GameActivity extends Activity {
 	        	TextView text = (TextView)findViewById(R.id.fullscreen_content);
 	        	text.setText(String.format(getResources().getString(R.string.pdg_description), extras.getInt("participants")));
 	            bindKeepButton();
-	            bindShareButton();
+	            bindGiveButton();
 	            break;
 	            
 	        case dg_proposer:
@@ -70,7 +70,7 @@ public class GameActivity extends Activity {
         
         // TODO: Explanation activity that is shown the first time and then a button to open again.
     	
-        game.opened = (int)(System.currentTimeMillis()*1000);
+        game.opened = (int)(System.currentTimeMillis()/1000);
         
         DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
     	SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -89,7 +89,7 @@ public class GameActivity extends Activity {
     	DatabaseHelper dbHelper = new DatabaseHelper(getApplicationContext());
     	SQLiteDatabase db = dbHelper.getWritableDatabase();
     	DatabaseHelper.insertAnswer(db, game.id, answer, game.opened);
-    	DatabaseHelper.removeGame(db, game.id);
+    	DatabaseHelper.setGameAnswered(db, game.id);
     	dbHelper.close();
 		finish();
     }
@@ -139,15 +139,15 @@ public class GameActivity extends Activity {
 		});
     }
     
-    private void bindShareButton() {
-        Button shareButton = (Button) findViewById(R.id.shareButton);
-        shareButton.setOnClickListener(new OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				answer("share");
-			}
-		});
-    }
+//    private void bindShareButton() {
+//        Button shareButton = (Button) findViewById(R.id.shareButton);
+//        shareButton.setOnClickListener(new OnClickListener() {
+//			
+//			@Override
+//			public void onClick(View v) {
+//				answer("share");
+//			}
+//		});
+//    }
     
 }
