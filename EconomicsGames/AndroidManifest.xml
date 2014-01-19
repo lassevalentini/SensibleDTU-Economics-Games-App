@@ -6,7 +6,7 @@
 
     <uses-sdk
         android:minSdkVersion="15"
-        android:targetSdkVersion="18" />
+        android:targetSdkVersion="19" />
 
     <!-- All probes -->
     <!-- <uses-permission android:name="android.permission.WAKE_LOCK"/> -->
@@ -86,11 +86,14 @@
         </activity>
         <activity
             android:name="dk.dtu.sensible.economicsgames.AuthActivity"
+            android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme" />
         <activity
             android:name="dk.dtu.sensible.economicsgames.GameFinishedActivity"
-            android:label="@string/title_activity_game_finished" >
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme" >
         </activity>
     </application>
 
