@@ -319,15 +319,26 @@ public class RegistrationHandler extends Service {
                     if (gcm == null) {
                         gcm = GoogleCloudMessaging.getInstance(context);
                     }
-                    // Not sure whats best here
+                    
+                    IOException latestException = null;
+                    // Try to register 5 times max
                     for (int i = 0; i < 5; i++) {
 	                    try {
 	                    	regid = gcm.register(Secret.SENDER_ID);
 	                    	break;
 	                    } catch (IOException ex) {
+	                    	latestException = ex;
 	                    	Log.d(TAG, "Trying to register again.");
+	                    	try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {}
 	                    }
                     }
+                    
+                    if (regid == null) {
+                    	throw latestException;
+                    }
+                    
                     Log.d(TAG, "Device registered, registration id=" + regid);
                     msg = "Device registered, registration id=" + regid;
 

@@ -17,7 +17,8 @@
     <string name="dg_keep_button">Keep both</string>
     <string name="give_button">Give both</string>
     <string name="pass_button">Pass</string>
-    <string name="app_ver">v0.1</string>
+    <string name="app_ver">v0.2</string>
     <string name="title_activity_game_finished">Voucher won!</string>
+    <string name="ok_button">OK</string>
 
 </resources>

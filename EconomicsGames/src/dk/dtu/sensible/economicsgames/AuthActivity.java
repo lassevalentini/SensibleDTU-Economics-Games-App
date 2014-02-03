@@ -77,7 +77,7 @@ public class AuthActivity extends Activity {
         wv.clearCache(true);
         // Don't store passwords or form data
         WebSettings mWebSettings = wv.getSettings();
-        mWebSettings.setSavePassword(false);
+//        mWebSettings.setSavePassword(false);
         mWebSettings.setSaveFormData(false);
         // don't store cookies:
         CookieManager cookieManager = CookieManager.getInstance();
@@ -98,10 +98,10 @@ public class AuthActivity extends Activity {
                 handler.proceed();
             }
 
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
-                return false; // then it is not handled by default action
-            }
+//            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+//                view.loadUrl(url);
+//                return false; // then it is not handled by default action
+//            }
             
             @Override
             public void onPageFinished(WebView view, String url) {
@@ -109,6 +109,7 @@ public class AuthActivity extends Activity {
                 if (!serviceStarted) {
                     String code = null;
                     if (url != null) {
+                        Log.d(TAG, "URL loaded: " + url);
                         if (url.contains(CODE_URL_PREFIX)) {
                         	Log.d(TAG,"Code url found");
                             if (url.contains("&code=")) {
@@ -144,7 +145,6 @@ public class AuthActivity extends Activity {
                         } */
 
                     }
-                    Log.d(TAG, "URL loaded: " + url);
                 }
             }
         });
@@ -166,7 +166,8 @@ public class AuthActivity extends Activity {
         String imei = tm.getDeviceId();
         String link = BASE_URL + "&client_id=" + Secret.CLIENT_ID + "&gcm_id=" + regId + "&device_id=" + imei;
         Log.d(TAG, link);
-        wv.getSettings().setUserAgentString("dk.dtu.imm.sensibleeconomics");
+//        wv.getSettings().setUserAgentString("dk.dtu.imm.sensibleeconomics");
+        
         wv.loadUrl(link);
 
     }

@@ -3,7 +3,7 @@ package dk.dtu.sensible.economicsgames;
 public final class SharedConstants {
 
     /**
-     * IP of Milosz, for testing
+     * IP of Raman, for testing
      */
     public static final String DOMAIN_URL = "https://raman.compute.dtu.dk/lasse/";
 
@@ -25,7 +25,7 @@ public final class SharedConstants {
 	public static String getJoinedScopes() {
 		String res = scopes[0];
 		for (int i = 1; i < scopes.length; i++) {
-			res = ","+scopes[i];	
+			res += ","+scopes[i];	
 		}
 		return res;
 	}
