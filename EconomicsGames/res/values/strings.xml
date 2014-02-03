@@ -18,5 +18,6 @@
     <string name="give_button">Give both</string>
     <string name="pass_button">Pass</string>
     <string name="app_ver">v0.1</string>
+    <string name="title_activity_game_finished">Voucher won!</string>
 
 </resources>

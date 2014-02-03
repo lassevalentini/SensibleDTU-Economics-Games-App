@@ -13,6 +13,9 @@ import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import dk.dtu.sensible.economicsgames.R;
@@ -316,7 +319,15 @@ public class RegistrationHandler extends Service {
                     if (gcm == null) {
                         gcm = GoogleCloudMessaging.getInstance(context);
                     }
-                    regid = gcm.register(Secret.SENDER_ID);
+                    // Not sure whats best here
+                    for (int i = 0; i < 5; i++) {
+	                    try {
+	                    	regid = gcm.register(Secret.SENDER_ID);
+	                    	break;
+	                    } catch (IOException ex) {
+	                    	Log.d(TAG, "Trying to register again.");
+	                    }
+                    }
                     Log.d(TAG, "Device registered, registration id=" + regid);
                     msg = "Device registered, registration id=" + regid;
 
@@ -506,5 +517,4 @@ public class RegistrationHandler extends Service {
         // Return full string
         return total;
     }
-
 }

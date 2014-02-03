@@ -36,7 +36,7 @@ public class AuthActivity extends Activity {
 
     private static final String GRANT_ENDPOINT_URL = "sensible-dtu/authorization_manager/connector_economics/auth/grant/";
     private static final String SUCCESS_URL = "/sensible-data/?status=success";
-    private static final String BASE_URL = SharedConstants.DOMAIN_URL + GRANT_ENDPOINT_URL + "?scope=connector_economics.submit_data,connector_economics.push_notifications";
+    private static final String BASE_URL = SharedConstants.DOMAIN_URL + GRANT_ENDPOINT_URL + "?scope=" +  SharedConstants.getJoinedScopes();
 
     private static final String CODE_URL_PREFIX = "sensible-dtu/authorization_manager/connector_economics/auth/granted/";
 
